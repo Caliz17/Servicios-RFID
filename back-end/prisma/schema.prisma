@@ -1,0 +1,114 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Cliente {
+  id_cliente         Int      @id @default(autoincrement())
+  nombre             String
+  apellido           String
+  direccion          String
+  telefono           String
+  correo_electronico String
+  contrasenia        String
+  perfil             String
+  estado             Int      @default(1)
+  cuentas            Cuenta[]
+}
+
+model TipoServicio {
+  id_tipo_servicio Int            @id @default(autoincrement())
+  nombre_servicio  String
+  descripcion      String
+  pagosServicio    PagoServicio[]
+}
+
+model TipoCuenta {
+  id_tipo_cuenta     Int      @id @default(autoincrement())
+  nombre_tipo_cuenta String
+  descripcion        String
+  cuentas            Cuenta[]
+}
+
+model Cuenta {
+  id_cuenta      Int     @id @default(autoincrement())
+  numero_cuenta  String
+  id_cliente     Int
+  id_tipo_cuenta Int
+  saldo          Decimal
+  estado         Int     @default(1)
+
+  cliente               Cliente         @relation(fields: [id_cliente], references: [id_cliente])
+  tipoCuenta            TipoCuenta      @relation(fields: [id_tipo_cuenta], references: [id_tipo_cuenta])
+  tarjetasRfid          TarjetaRfid[]
+  pagosServicio         PagoServicio[]
+  transferenciasSalida  Transferencia[] @relation("TransferenciaSalida")
+  transferenciasEntrada Transferencia[] @relation("TransferenciaEntrada")
+}
+
+model RolUsuario {
+  id_rol_usuario Int       @id @default(autoincrement())
+  nombre_rol     String
+  descripcion    String
+  usuarios       Usuario[]
+}
+
+model Usuario {
+  id_usuario     Int    @id @default(autoincrement())
+  nombre_usuario String
+  contrasena     String
+  id_rol_usuario Int
+
+  rolUsuario     RolUsuario      @relation(fields: [id_rol_usuario], references: [id_rol_usuario])
+  transferencias Transferencia[]
+  auditorias     Auditoria[]
+}
+
+model PagoServicio {
+  id_pago_servicio Int      @id @default(autoincrement())
+  fecha_pago       DateTime
+  monto_pago       Decimal
+  id_cuenta        Int
+  id_tipo_servicio Int
+
+  cuenta       Cuenta       @relation(fields: [id_cuenta], references: [id_cuenta])
+  tipoServicio TipoServicio @relation(fields: [id_tipo_servicio], references: [id_tipo_servicio])
+}
+
+model Transferencia {
+  id_transferencia       Int      @id @default(autoincrement())
+  fecha_transferencia    DateTime
+  monto_transferencia    Decimal
+  cuenta_origen          Int
+  cuenta_destino         Int
+  id_usuario_autorizador Int
+
+  cuentaOrigen       Cuenta  @relation("TransferenciaSalida", fields: [cuenta_origen], references: [id_cuenta])
+  cuentaDestino      Cuenta  @relation("TransferenciaEntrada", fields: [cuenta_destino], references: [id_cuenta])
+  usuarioAutorizador Usuario @relation(fields: [id_usuario_autorizador], references: [id_usuario])
+}
+
+model Auditoria {
+  id_auditoria         Int      @id @default(autoincrement())
+  fecha_hora           DateTime
+  accion               String
+  tabla_afectada       String
+  id_registro_afectado Int
+  id_usuario           Int
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+}
+
+model TarjetaRfid {
+  id_tarjeta       Int      @id @default(autoincrement())
+  numero_tarjeta   String
+  id_cuenta        Int
+  fecha_asignacion DateTime
+  estado           Int      @default(1)
+
+  cuenta Cuenta @relation(fields: [id_cuenta], references: [id_cuenta])
+}
