@@ -77,7 +77,7 @@ router.put('/updateClientes/:id', async (req, res) => {
 });
 
 // down to client
-router.put('/downCient/:id', async (req, res) => {
+router.put('/downClient/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const downCliente = await prisma.cliente.update({
@@ -93,7 +93,7 @@ router.put('/downCient/:id', async (req, res) => {
 });
 
 
-router.put('/upCient/:id', async (req, res) => {
+router.put('/upClient/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const upCliente = await prisma.cliente.update({
