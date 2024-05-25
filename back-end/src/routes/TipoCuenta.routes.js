@@ -3,17 +3,77 @@ import { prisma } from '../db.js';
 
 const router = Router();
 
-// List all account types
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     TipoCuenta:
+ *       type: object
+ *       required:
+ *         - nombre_tipo_cuenta
+ *         - descripcion
+ *       properties:
+ *         id_tipo_cuenta:
+ *           type: integer
+ *           description: Identificador único del tipo de cuenta
+ *         nombre_tipo_cuenta:
+ *           type: string
+ *           description: Nombre del tipo de cuenta
+ *         descripcion:
+ *           type: string
+ *           description: Descripción del tipo de cuenta
+ *       example:
+ *         id_tipo_cuenta: 1
+ *         nombre_tipo_cuenta: "Cuenta de Ahorros"
+ *         descripcion: "Cuenta de ahorros para clientes regulares"
+ */
+
+/**
+ * @swagger
+ * /api/accountTypes:
+ *   get:
+ *     summary: Lista todos los tipos de cuenta
+ *     responses:
+ *       200:
+ *         description: Lista de tipos de cuenta
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/TipoCuenta'
+ */
 router.get('/accountTypes', async (req, res) => {
     try {
         const tcuentas = await prisma.tipoCuenta.findMany();
-        res.json({ status: true, message: 'Account types list'});
+        res.json({ status: true, data: tcuentas });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to fetch account types' });
     }
 });
 
-// Get a single account type by id
+/**
+ * @swagger
+ * /api/accountType/{id}:
+ *   get:
+ *     summary: Obtiene un tipo de cuenta por su ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del tipo de cuenta
+ *     responses:
+ *       200:
+ *         description: Tipo de cuenta encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TipoCuenta'
+ *       404:
+ *         description: Tipo de cuenta no encontrado
+ */
 router.get('/accountType/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -21,7 +81,7 @@ router.get('/accountType/:id', async (req, res) => {
             where: { id_tipo_cuenta: parseInt(id) }
         });
         if (tcuenta) {
-            res.json({ status: true, data: tcuenta});
+            res.json({ status: true, data: tcuenta });
         } else {
             res.status(404).json({ status: false, message: 'Account type not found' });
         }
@@ -30,7 +90,23 @@ router.get('/accountType/:id', async (req, res) => {
     }
 });
 
-// Create a new account type
+/**
+ * @swagger
+ * /api/newAccountType:
+ *   post:
+ *     summary: Crea un nuevo tipo de cuenta
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TipoCuenta'
+ *     responses:
+ *       201:
+ *         description: Tipo de cuenta creado
+ *       500:
+ *         description: Error creando el tipo de cuenta
+ */
 router.post('/newAccountType', async (req, res) => {
     const { nombre_tipo_cuenta, descripcion } = req.body;
     try {
@@ -46,7 +122,30 @@ router.post('/newAccountType', async (req, res) => {
     }
 });
 
-// Update an existing account type
+/**
+ * @swagger
+ * /api/updateAccountType/{id}:
+ *   put:
+ *     summary: Actualiza un tipo de cuenta existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del tipo de cuenta
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TipoCuenta'
+ *     responses:
+ *       200:
+ *         description: Tipo de cuenta actualizado
+ *       500:
+ *         description: Error actualizando el tipo de cuenta
+ */
 router.put('/updateAccountType/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre_tipo_cuenta, descripcion } = req.body;
@@ -64,7 +163,24 @@ router.put('/updateAccountType/:id', async (req, res) => {
     }
 });
 
-// Delete an account type
+/**
+ * @swagger
+ * /api/deleteAccountType/{id}:
+ *   delete:
+ *     summary: Elimina un tipo de cuenta existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del tipo de cuenta
+ *     responses:
+ *       204:
+ *         description: Tipo de cuenta eliminado
+ *       500:
+ *         description: Error eliminando el tipo de cuenta
+ */
 router.delete('/deleteAccountType/:id', async (req, res) => {
     const { id } = req.params;
     try {
