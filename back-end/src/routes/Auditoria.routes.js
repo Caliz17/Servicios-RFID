@@ -21,7 +21,7 @@ router.get('/auditoria/:id', async (req, res) => {
             where: { id_auditoria: parseInt(id) }
         });
         if (auditoria) {
-            res.json(auditoria);
+            res.json({status:true, data: auditoria})
         } else {
             res.status(404).json({ status: false, error: 'Auditoria not found' });
         }
