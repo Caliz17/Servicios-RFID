@@ -3,7 +3,46 @@ import { prisma } from '../db.js';
 
 const router = Router();
 
-// List all service types
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     TipoServicio:
+ *       type: object
+ *       required:
+ *         - nombre_servicio
+ *         - descripcion
+ *       properties:
+ *         id_tipo_servicio:
+ *           type: integer
+ *           description: Identificador único del tipo de servicio
+ *         nombre_servicio:
+ *           type: string
+ *           description: Nombre del tipo de servicio
+ *         descripcion:
+ *           type: string
+ *           description: Descripción del tipo de servicio
+ *       example:
+ *         id_tipo_servicio: 1
+ *         nombre_servicio: "Limpieza"
+ *         descripcion: "Servicio de limpieza semanal"
+ */
+
+/**
+ * @swagger
+ * /api/typeServices:
+ *   get:
+ *     summary: Lista todos los tipos de servicio
+ *     responses:
+ *       200:
+ *         description: Lista de tipos de servicio
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/TipoServicio'
+ */
 router.get('/typeServices', async (req, res) => {
     try {
         const tservicio = await prisma.tipoServicio.findMany();
@@ -13,7 +52,28 @@ router.get('/typeServices', async (req, res) => {
     }
 });
 
-// Get a single service type by id
+/**
+ * @swagger
+ * /api/typeService/{id}:
+ *   get:
+ *     summary: Obtiene un tipo de servicio por su ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del tipo de servicio
+ *     responses:
+ *       200:
+ *         description: Tipo de servicio encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/TipoServicio'
+ *       404:
+ *         description: Tipo de servicio no encontrado
+ */
 router.get('/typeService/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -30,7 +90,23 @@ router.get('/typeService/:id', async (req, res) => {
     }
 });
 
-// Create a new service type
+/**
+ * @swagger
+ * /api/newTypeService:
+ *   post:
+ *     summary: Crea un nuevo tipo de servicio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TipoServicio'
+ *     responses:
+ *       201:
+ *         description: Tipo de servicio creado
+ *       500:
+ *         description: Error creando el tipo de servicio
+ */
 router.post('/newTypeService', async (req, res) => {
     const { nombre_servicio, descripcion } = req.body;
     try {
@@ -46,7 +122,30 @@ router.post('/newTypeService', async (req, res) => {
     }
 });
 
-// Update an existing service type
+/**
+ * @swagger
+ * /api/updateTypeService/{id}:
+ *   put:
+ *     summary: Actualiza un tipo de servicio existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del tipo de servicio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/TipoServicio'
+ *     responses:
+ *       200:
+ *         description: Tipo de servicio actualizado
+ *       500:
+ *         description: Error actualizando el tipo de servicio
+ */
 router.put('/updateTypeService/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre_servicio, descripcion } = req.body;
@@ -64,7 +163,24 @@ router.put('/updateTypeService/:id', async (req, res) => {
     }
 });
 
-// Delete a service type
+/**
+ * @swagger
+ * /api/deleteTypeService/{id}:
+ *   delete:
+ *     summary: Elimina un tipo de servicio existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del tipo de servicio
+ *     responses:
+ *       200:
+ *         description: Tipo de servicio eliminado
+ *       500:
+ *         description: Error eliminando el tipo de servicio
+ */
 router.delete('/deleteTypeService/:id', async (req, res) => {
     const { id } = req.params;
     try {
