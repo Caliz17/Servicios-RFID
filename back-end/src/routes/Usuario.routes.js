@@ -3,7 +3,51 @@ import { prisma } from '../db.js';
 
 const router = Router();
 
-// List all users
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Usuario:
+ *       type: object
+ *       required:
+ *         - nombre_usuario
+ *         - contrasena
+ *         - id_rol_usuario
+ *       properties:
+ *         id_usuario:
+ *           type: integer
+ *           description: Identificador único del usuario
+ *         nombre_usuario:
+ *           type: string
+ *           description: Nombre del usuario
+ *         contrasena:
+ *           type: string
+ *           description: Contraseña del usuario
+ *         id_rol_usuario:
+ *           type: integer
+ *           description: ID del rol del usuario
+ *       example:
+ *         id_usuario: 1
+ *         nombre_usuario: usuario1
+ *         contrasena: password1
+ *         id_rol_usuario: 1
+ */
+
+/**
+ * @swagger
+ * /api/users:
+ *   get:
+ *     summary: Lista todos los usuarios
+ *     responses:
+ *       200:
+ *         description: Lista de usuarios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Usuario'
+ */
 router.get('/users', async (req, res) => {
     try {
         const usuarios = await prisma.usuario.findMany();
@@ -13,7 +57,28 @@ router.get('/users', async (req, res) => {
     }
 });
 
-// Get a single user by id
+/**
+ * @swagger
+ * /api/user/{id}:
+ *   get:
+ *     summary: Obtiene un usuario por su ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario
+ *     responses:
+ *       200:
+ *         description: Usuario encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Usuario'
+ *       404:
+ *         description: Usuario no encontrado
+ */
 router.get('/user/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -30,7 +95,23 @@ router.get('/user/:id', async (req, res) => {
     }
 });
 
-// Create a new user
+/**
+ * @swagger
+ * /api/newUser:
+ *   post:
+ *     summary: Crea un nuevo usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Usuario'
+ *     responses:
+ *       201:
+ *         description: Usuario creado
+ *       500:
+ *         description: Error creando el usuario
+ */
 router.post('/newUser', async (req, res) => {
     const { nombre_usuario, contrasena, id_rol_usuario } = req.body;
     try {
@@ -47,7 +128,30 @@ router.post('/newUser', async (req, res) => {
     }
 });
 
-// Update an existing user
+/**
+ * @swagger
+ * /api/updateUser/{id}:
+ *   put:
+ *     summary: Actualiza un usuario existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Usuario'
+ *     responses:
+ *       200:
+ *         description: Usuario actualizado
+ *       500:
+ *         description: Error actualizando el usuario
+ */
 router.put('/updateUser/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre_usuario, contrasena, id_rol_usuario } = req.body;
@@ -66,7 +170,24 @@ router.put('/updateUser/:id', async (req, res) => {
     }
 });
 
-// Delete a user
+/**
+ * @swagger
+ * /api/deleteUser/{id}:
+ *   delete:
+ *     summary: Elimina un usuario existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del usuario
+ *     responses:
+ *       204:
+ *         description: Usuario eliminado
+ *       500:
+ *         description: Error eliminando el usuario
+ */
 router.delete('/deleteUser/:id', async (req, res) => {
     const { id } = req.params;
     try {
