@@ -3,7 +3,61 @@ import { prisma } from '../db.js';
 
 const router = Router();
 
-// List all accounts
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Cuenta:
+ *       type: object
+ *       required:
+ *         - numero_cuenta
+ *         - id_cliente
+ *         - id_tipo_cuenta
+ *         - saldo
+ *       properties:
+ *         id_cuenta:
+ *           type: integer
+ *           description: Identificador único de la cuenta
+ *         numero_cuenta:
+ *           type: string
+ *           description: Número de la cuenta
+ *         id_cliente:
+ *           type: integer
+ *           description: Identificador del cliente asociado
+ *         id_tipo_cuenta:
+ *           type: integer
+ *           description: Identificador del tipo de cuenta
+ *         saldo:
+ *           type: number
+ *           format: float
+ *           description: Saldo de la cuenta
+ *         estado:
+ *           type: integer
+ *           description: Estado de la cuenta (1 para activa, 0 para inactiva)
+ *       example:
+ *         id_cuenta: 1
+ *         numero_cuenta: "123456789"
+ *         id_cliente: 1
+ *         id_tipo_cuenta: 1
+ *         saldo: 1000.50
+ *         estado: 1
+ */
+
+/**
+ * @swagger
+ * /api/cuentas:
+ *   get:
+ *     summary: Obtiene una lista de cuentas
+ *     responses:
+ *       200:
+ *         description: Lista de cuentas
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Cuenta'
+ */
 router.get('/cuentas', async (req, res) => {
     try {
         const cuentas = await prisma.cuenta.findMany();
@@ -13,7 +67,28 @@ router.get('/cuentas', async (req, res) => {
     }
 });
 
-// Get a single account by id
+/**
+ * @swagger
+ * /api/cuenta/{id}:
+ *   get:
+ *     summary: Obtiene una cuenta por su ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la cuenta
+ *     responses:
+ *       200:
+ *         description: Cuenta encontrada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Cuenta'
+ *       404:
+ *         description: Cuenta no encontrada
+ */
 router.get('/cuenta/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -30,7 +105,23 @@ router.get('/cuenta/:id', async (req, res) => {
     }
 });
 
-// Create a new account
+/**
+ * @swagger
+ * /api/newCuenta:
+ *   post:
+ *     summary: Crea una nueva cuenta
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Cuenta'
+ *     responses:
+ *       201:
+ *         description: Cuenta creada
+ *       500:
+ *         description: Error creando la cuenta
+ */
 router.post('/newCuenta', async (req, res) => {
     const { numero_cuenta, id_cliente, id_tipo_cuenta, saldo, estado } = req.body;
     try {
@@ -49,7 +140,30 @@ router.post('/newCuenta', async (req, res) => {
     }
 });
 
-// Update an existing account
+/**
+ * @swagger
+ * /api/updateCuenta/{id}:
+ *   put:
+ *     summary: Actualiza una cuenta existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la cuenta
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Cuenta'
+ *     responses:
+ *       200:
+ *         description: Cuenta actualizada
+ *       500:
+ *         description: Error actualizando la cuenta
+ */
 router.put('/updateCuenta/:id', async (req, res) => {
     const { id } = req.params;
     const { numero_cuenta, id_cliente, id_tipo_cuenta, saldo, estado } = req.body;
@@ -70,7 +184,24 @@ router.put('/updateCuenta/:id', async (req, res) => {
     }
 });
 
-// down an account
+/**
+ * @swagger
+ * /api/downCuenta/{id}:
+ *   put:
+ *     summary: Desactiva una cuenta
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la cuenta
+ *     responses:
+ *       202:
+ *         description: Cuenta desactivada
+ *       500:
+ *         description: Error desactivando la cuenta
+ */
 router.put('/downCuenta/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -86,7 +217,24 @@ router.put('/downCuenta/:id', async (req, res) => {
     }
 });
 
-// up an account
+/**
+ * @swagger
+ * /api/upCuenta/{id}:
+ *   put:
+ *     summary: Activa una cuenta
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la cuenta
+ *     responses:
+ *       202:
+ *         description: Cuenta activada
+ *       500:
+ *         description: Error activando la cuenta
+ */
 router.put('/upCuenta/:id', async (req, res) => {
     const { id } = req.params;
     try {
