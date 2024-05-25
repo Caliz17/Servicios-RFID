@@ -1,7 +1,8 @@
 import express from 'express';
+import { specs, swaggerUi } from './swaggerConfig.js';
 
 import Clientes from './routes/Clientes.routes.js';
-import Auditorias from './routes/Auditoria.routes.js';
+import Auditorias from './routes/Auditoria.routes.js'; // Asegúrate de que esta ruta esté correctamente importada
 import Cuentas from './routes/Cuenta.routes.js';
 import PagoServicios from './routes/PagoServicio.routes.js';
 import RolUsuario from './routes/RolUsuario.routes.js';
@@ -16,8 +17,10 @@ const port = 3000;
 
 app.use(express.json());
 
+// Swagger documentation route
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api', Clientes);
-app.use('/api', Auditorias);
+app.use('/api', Auditorias); // Asegúrate de que esta línea esté presente
 app.use('/api', Cuentas);
 app.use('/api', PagoServicios);
 app.use('/api', RolUsuario);
@@ -86,8 +89,6 @@ app.get('/api', (req, res) => {
     </html>
   `);
 });
-
-
 
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
