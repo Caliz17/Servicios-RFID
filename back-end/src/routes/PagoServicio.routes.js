@@ -3,7 +3,58 @@ import { prisma } from '../db.js';
 
 const router = Router();
 
-// List all service payments
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     PagoServicio:
+ *       type: object
+ *       required:
+ *         - fecha_pago
+ *         - monto_pago
+ *         - id_cuenta
+ *         - id_tipo_servicio
+ *       properties:
+ *         id_pago_servicio:
+ *           type: integer
+ *           description: Identificador único del pago de servicio
+ *         fecha_pago:
+ *           type: string
+ *           format: date-time
+ *           description: Fecha y hora del pago
+ *         monto_pago:
+ *           type: number
+ *           format: float
+ *           description: Monto del pago
+ *         id_cuenta:
+ *           type: integer
+ *           description: Identificador de la cuenta desde la cual se realizó el pago
+ *         id_tipo_servicio:
+ *           type: integer
+ *           description: Identificador del tipo de servicio pagado
+ *       example:
+ *         id_pago_servicio: 1
+ *         fecha_pago: "2023-05-01T12:00:00Z"
+ *         monto_pago: 100.50
+ *         id_cuenta: 1
+ *         id_tipo_servicio: 1
+ */
+
+/**
+ * @swagger
+ * /api/pagos:
+ *   get:
+ *     summary: Lista todos los pagos de servicios
+ *     responses:
+ *       200:
+ *         description: Lista de pagos de servicios
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/PagoServicio'
+ */
 router.get('/pagos', async (req, res) => {
     try {
         const pagos = await prisma.pagoServicio.findMany();
@@ -13,7 +64,28 @@ router.get('/pagos', async (req, res) => {
     }
 });
 
-// Get a single service payment by id
+/**
+ * @swagger
+ * /api/pago/{id}:
+ *   get:
+ *     summary: Obtiene un pago de servicio por su ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del pago de servicio
+ *     responses:
+ *       200:
+ *         description: Pago de servicio encontrado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/PagoServicio'
+ *       404:
+ *         description: Pago de servicio no encontrado
+ */
 router.get('/pago/:id', async (req, res) => {
     const { id } = req.params;
     try {
@@ -30,7 +102,23 @@ router.get('/pago/:id', async (req, res) => {
     }
 });
 
-// Create a new service payment
+/**
+ * @swagger
+ * /api/newPay:
+ *   post:
+ *     summary: Crea un nuevo pago de servicio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PagoServicio'
+ *     responses:
+ *       201:
+ *         description: Pago de servicio creado
+ *       500:
+ *         description: Error creando el pago de servicio
+ */
 router.post('/newPay', async (req, res) => {
     const { fecha_pago, monto_pago, id_cuenta, id_tipo_servicio } = req.body;
     try {
@@ -48,7 +136,30 @@ router.post('/newPay', async (req, res) => {
     }
 });
 
-// Update an existing service payment
+/**
+ * @swagger
+ * /api/updatePay/{id}:
+ *   put:
+ *     summary: Actualiza un pago de servicio existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del pago de servicio
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/PagoServicio'
+ *     responses:
+ *       200:
+ *         description: Pago de servicio actualizado
+ *       500:
+ *         description: Error actualizando el pago de servicio
+ */
 router.put('/updatePay/:id', async (req, res) => {
     const { id } = req.params;
     const { fecha_pago, monto_pago, id_cuenta, id_tipo_servicio } = req.body;
@@ -68,7 +179,24 @@ router.put('/updatePay/:id', async (req, res) => {
     }
 });
 
-// Delete a service payment
+/**
+ * @swagger
+ * /api/deletePay/{id}:
+ *   delete:
+ *     summary: Elimina un pago de servicio
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID del pago de servicio
+ *     responses:
+ *       204:
+ *         description: Pago de servicio eliminado
+ *       500:
+ *         description: Error eliminando el pago de servicio
+ */
 router.delete('/deletePay/:id', async (req, res) => {
     const { id } = req.params;
     try {
