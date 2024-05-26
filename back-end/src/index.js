@@ -31,7 +31,7 @@ app.use('/api', Transferencia);
 app.use('/api', Usuario);
 
 // inicio bienvenida en la ruta raiz
-app.get('/api', (req, res) => {
+app.get('/', (req, res) => {
   res.send(`
     <!DOCTYPE html>
     <html lang="es">
