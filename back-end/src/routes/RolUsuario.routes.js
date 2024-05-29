@@ -176,7 +176,7 @@ router.put('/updateRole/:id', async (req, res) => {
  *           type: integer
  *         description: ID del rol de usuario
  *     responses:
- *       204:
+ *       200:
  *         description: Rol de usuario eliminado
  *       500:
  *         description: Error eliminando el rol de usuario
@@ -187,7 +187,7 @@ router.delete('/deleteRole/:id', async (req, res) => {
         await prisma.rolUsuario.delete({
             where: { id_rol_usuario: parseInt(id) }
         });
-        res.status(204).json({ status: true, message: 'Role deleted' });
+        res.json({ status: true, message: 'Role deleted' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete role' });
     }
