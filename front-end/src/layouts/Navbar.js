@@ -1,6 +1,39 @@
 import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faCogs, faUsers, faMoneyBill, faUsersCog } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faCogs, faUsers, faMoneyBill, faUsersCog, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+
+
+const Dropdown = ({ title, icon, items }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button
+        className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-xl font-medium flex items-center"
+      >
+        <FontAwesomeIcon icon={icon} className="mr-2" />
+        {title}
+      </button>
+      {isOpen && (
+        <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10">
+          {items.map((item, index) => (
+            <a
+              key={index}
+              href={item.href}
+              className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+            >
+              {item.label}
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,26 +52,29 @@ const Navbar = () => {
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">
-                <a href="/home" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
-                  <FontAwesomeIcon icon={faHome} /> Inicio
-                </a>
-                <a href="/services" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
-                  <FontAwesomeIcon icon={faCogs} /> Servicios
-                </a>
-                <a href="/customer" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
-                  <FontAwesomeIcon icon={faUsers} /> Clientes
-                </a>
-                <a href="/payments" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
-                  <FontAwesomeIcon icon={faMoneyBill} /> Pagos
-                </a>
-                <a href="/users" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
-                  <FontAwesomeIcon icon={faUsersCog} /> Usuarios
-                </a>
+                <Dropdown
+                  title="Inicio"
+                  icon={faHome}
+                  items={[{ label: 'Dashboard', href: '/home' }]}
+                />
+                <Dropdown
+                  title="Servicios"
+                  icon={faCogs}
+                  items={[{ label: 'Control de Servicios', href: '/services' }]}
+                />
+                <Dropdown
+                  title="Cuentas"
+                  icon={faFileInvoice}
+                  items={[{ label: 'Control de Cuentas', href: '/account' }, { label: 'Tipos de Cuenta', href: '/typeAccount' }]}
+                />
               </div>
             </div>
           </div>
           <div className="-mr-2 flex md:hidden">
-            <button onClick={toggleMenu} className="bg-gray-900 text-gray-400 hover:text-white hover:bg-gray-800 inline-flex items-center justify-center p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white">
+            <button
+              onClick={toggleMenu}
+              className="bg-gray-900 text-gray-400 hover:text-white hover:bg-gray-800 inline-flex items-center justify-center p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-white"
+            >
               <span className="sr-only">Open main menu</span>
               {!isOpen ? (
                 <svg className="block h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
