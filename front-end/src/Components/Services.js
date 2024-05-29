@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { connectToAPI } from '../api';
+import { connectToAPI } from '../api.js';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faSquarePlus, faListCheck } from '@fortawesome/free-solid-svg-icons';
