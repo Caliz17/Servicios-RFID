@@ -1,8 +1,8 @@
 import express from 'express';
+import cors from 'cors';
 import { specs, swaggerUi } from './swaggerConfig.js';
-
 import Clientes from './routes/Clientes.routes.js';
-import Auditorias from './routes/Auditoria.routes.js'; // Asegúrate de que esta ruta esté correctamente importada
+import Auditorias from './routes/Auditoria.routes.js';
 import Cuentas from './routes/Cuenta.routes.js';
 import PagoServicios from './routes/PagoServicio.routes.js';
 import RolUsuario from './routes/RolUsuario.routes.js';
@@ -11,16 +11,24 @@ import TipoCuenta from './routes/TipoCuenta.routes.js';
 import TipoServicio from './routes/TipoServicio.routes.js';
 import Transferencia from './routes/Transferencia.routes.js';
 import Usuario from './routes/Usuario.routes.js';
-
 const app = express();
 const port = 3001;
+
+// Configura las opciones de cors
+const corsOptions = {
+  origin: 'http://localhost:3000', // El origen permitido
+  optionsSuccessStatus: 200 // Algunos navegadores antiguos (IE11, ciertos SmartTVs) no manejan bien status 204
+};
+
+// Usa cors como middleware
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
 // Swagger documentation route
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api', Clientes);
-app.use('/api', Auditorias); // Asegúrate de que esta línea esté presente
+app.use('/api', Auditorias);
 app.use('/api', Cuentas);
 app.use('/api', PagoServicios);
 app.use('/api', RolUsuario);
