@@ -1,60 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import React, { useState } from 'react';
 import { connectToAPI } from '../api';
 
 const Services = () => {
-  const [nombreServicio, setNombreServicio] = useState('');
+  const [nombre_servicio, setNombreServicio] = useState('');
   const [descripcion, setDescripcion] = useState('');
-  const [servicios, setServicios] = useState([]);
 
-  useEffect(() => {
-    const fetchServicios = async () => {
-      try {
-        const data = await connectToAPI('/typeServices');
-        setServicios(data);
-      } catch (error) {
-        console.error('Error al obtener los servicios:', error);
-      }
-    };
-    fetchServicios();
-
-  }, []);
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const nuevoServicio = {
-      nombreServicio,
-      descripcion,
-    };
-    setServicios([...servicios, nuevoServicio]);
-    setNombreServicio('');
-    setDescripcion('');
-  };
-
-  const handleEditar = (index) => {
-    // Aquí puedes implementar la lógica para editar un servicio
-    console.log('Editando servicio en el índice:', index);
-  };
-
-  const handleEliminar = (index) => {
-    // Aquí puedes implementar la lógica para eliminar un servicio
-    const nuevosServicios = servicios.filter((servicio, i) => i !== index);
-    setServicios(nuevosServicios);
-    console.log('Eliminando servicio en el índice:', index);
+    try {
+      // Realizar la solicitud POST a la API
+      const response = await connectToAPI('/newTypeService', {
+        nombre_servicio,
+        descripcion
+      });
+      
+      // Verificar si la solicitud fue exitosa
+      if (response.status) {
+        console.log('Registro exitoso');
+      } else {
+        console.error('Error al registrar:', response.error);
+      }
+    } catch (error) {
+      console.error('Error al conectar con la API:', error);
+    }
   };
 
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-200 p-6">
       <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl mb-6">
-        {/* Cambia "max-w-xl" a la anchura máxima que desees para el formulario */}
         <div className="mb-4">
-          <label htmlFor="nombreServicio" className="block text-gray-700 font-bold mb-2">
+          <label htmlFor="nombre_servicio" className="block text-gray-700 font-bold mb-2">
             Nombre del Servicio
           </label>
           <input
             type="text"
-            id="nombreServicio"
-            value={nombreServicio}
+            id="nombre_servicio"
+            value={nombre_servicio}
             onChange={(e) => setNombreServicio(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
             required
@@ -75,37 +56,6 @@ const Services = () => {
           Enviar
         </button>
       </form>
-
-      <table className="table-auto w-full max-w-xl bg-white rounded-lg shadow-lg">
-        {/* Cambia "max-w-xl" a la anchura máxima que desees para la tabla */}
-        <thead>
-          <tr>
-            <th className="px-4 py-2">No.</th> {/* Nueva columna para el número de servicio */}
-            <th className="px-4 py-2">Nombre del Servicio</th>
-            <th className="px-4 py-2">Descripción</th>
-            <th className="px-4 py-2">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {servicios.map((servicio, index) => (
-            <tr key={index}>
-              <td className="border px-4 py-2">{index + 1}</td>
-              <td className="border px-4 py-2">{servicio.nombreServicio || '-'}</td>
-              <td className="border px-4 py-2">{servicio.descripcion || '-'}</td>
-              <td className="border px-4 py-2">
-                <button onClick={() => handleEditar(index)} className="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2">
-                  <FontAwesomeIcon icon={faEdit} />
-                </button>
-                <button onClick={() => handleEliminar(index)} className="bg-red-500 text-white px-4 py-2 rounded-lg">
-                  <FontAwesomeIcon icon={faTrash} />
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-
-
-      </table>
     </div>
   );
 };
