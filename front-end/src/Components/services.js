@@ -1,12 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { connectToAPI } from '../api';
 
 const Services = () => {
   const [nombreServicio, setNombreServicio] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [servicios, setServicios] = useState([]);
 
+  useEffect(() => {
+    const fetchServicios = async () => {
+      try {
+        const data = await connectToAPI('/typeServices');
+        setServicios(data);
+      } catch (error) {
+        console.error('Error al obtener los servicios:', error);
+      }
+    };
+    fetchServicios();
+
+  }, []);
   const handleSubmit = (e) => {
     e.preventDefault();
     const nuevoServicio = {
@@ -76,20 +89,22 @@ const Services = () => {
         <tbody>
           {servicios.map((servicio, index) => (
             <tr key={index}>
-              <td className="border px-4 py-2">{index + 1}</td> {/* Número de servicio */}
-              <td className="border px-4 py-2">{servicio.nombreServicio}</td>
-              <td className="border px-4 py-2">{servicio.descripcion}</td>
+              <td className="border px-4 py-2">{index + 1}</td>
+              <td className="border px-4 py-2">{servicio.nombreServicio || '-'}</td>
+              <td className="border px-4 py-2">{servicio.descripcion || '-'}</td>
               <td className="border px-4 py-2">
                 <button onClick={() => handleEditar(index)} className="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2">
-                  <FontAwesomeIcon icon={faEdit} /> {/* Icono de editar */}
+                  <FontAwesomeIcon icon={faEdit} />
                 </button>
                 <button onClick={() => handleEliminar(index)} className="bg-red-500 text-white px-4 py-2 rounded-lg">
-                  <FontAwesomeIcon icon={faTrash} /> {/* Icono de eliminar */}
+                  <FontAwesomeIcon icon={faTrash} />
                 </button>
               </td>
             </tr>
           ))}
         </tbody>
+
+
       </table>
     </div>
   );
