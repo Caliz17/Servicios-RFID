@@ -1,30 +1,44 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faHome, faCogs, faUsers, faMoneyBill, faUsersCog, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
 
 
 const Dropdown = ({ title, icon, items }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const timeoutRef = useRef(null);
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setIsOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsOpen(false);
+    }, 200); // Retardo de 200 ms
+  };
 
   return (
     <div
       className="relative"
-      onMouseEnter={() => setIsOpen(true)}
-      onMouseLeave={() => setIsOpen(false)}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
     >
       <button
-        className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-xl font-medium flex items-center"
+        className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium flex items-center"
       >
         <FontAwesomeIcon icon={icon} className="mr-2" />
         {title}
       </button>
       {isOpen && (
-        <div className="absolute left-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg z-10">
+        <div className="absolute left-0 mt-0 w-32 bg-gray-800 rounded-md shadow-lg">
           {items.map((item, index) => (
             <a
               key={index}
               href={item.href}
-              className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-white"
+              className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:rounded-md hover:text-white"
             >
               {item.label}
             </a>
@@ -34,6 +48,7 @@ const Dropdown = ({ title, icon, items }) => {
     </div>
   );
 };
+
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +66,7 @@ const Navbar = () => {
               <img className="h-8 w-8" src="https://cdn.icon-icons.com/icons2/3058/PNG/512/cloud_hosting_cloud_services_cloud_data_network_cloud_sharing_icon_190633.png" alt="Logo" />
             </div>
             <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
+              <div className="ml-10 flex items-baseline space-x-8">
                 <Dropdown
                   title="Inicio"
                   icon={faHome}
