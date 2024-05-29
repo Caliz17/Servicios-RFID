@@ -82,6 +82,16 @@ const Navbar = () => {
                   icon={faFileInvoice}
                   items={[{ label: 'Control de Cuentas', href: '/account' }, { label: 'Tipos de Cuenta', href: '/typeAccount' }]}
                 />
+                <Dropdown
+                  title="Clientes"
+                  icon={faUsers}
+                  items={[{ label: 'Control de Clientes', href: '/customer' }]}
+                />
+                <Dropdown
+                  title="Usuarios"
+                  icon={faUsersCog}
+                  items={[{ label: 'Control de Usuarios', href: '/users' }, { label: 'Roles de Usuario', href: '/roles' }]}  
+                />
               </div>
             </div>
           </div>

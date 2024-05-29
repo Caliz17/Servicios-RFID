@@ -4,6 +4,8 @@ import Navbar from './layouts/Navbar.js';
 import Home from './Components/Home.js'; 
 import Services from './Components/Services.js';
 import TypeAccount from './Components/TypeAccount.js';
+import Clients from './Components/Customer.js';
+import UserRoles from './Components/RoleUser.js';
 
 function App() {
   return (
@@ -15,6 +17,8 @@ function App() {
           <Route path="/home" element={<Home />} />
           <Route path="/services" element={<Services />} />
           <Route path='/typeAccount' element={<TypeAccount/>} />
+          <Route path='/customer' element={<Clients/>} />
+          <Route path='/roles' element={<UserRoles/>} />
         </Routes>
       </div>
     </Router>
