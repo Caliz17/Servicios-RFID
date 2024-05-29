@@ -1,32 +1,39 @@
 import React, { useState } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 const Services = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [nombreServicio, setNombreServicio] = useState('');
   const [descripcion, setDescripcion] = useState('');
   const [servicios, setServicios] = useState([]);
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Aquí puedes manejar el envío del formulario, como enviarlo a una API
     const nuevoServicio = {
       nombreServicio,
-      descripcion
+      descripcion,
     };
     setServicios([...servicios, nuevoServicio]);
     setNombreServicio('');
     setDescripcion('');
-    console.log('Nombre del Servicio:', nombreServicio);
-    console.log('Descripción:', descripcion);
+  };
+
+  const handleEditar = (index) => {
+    // Aquí puedes implementar la lógica para editar un servicio
+    console.log('Editando servicio en el índice:', index);
+  };
+
+  const handleEliminar = (index) => {
+    // Aquí puedes implementar la lógica para eliminar un servicio
+    const nuevosServicios = servicios.filter((servicio, i) => i !== index);
+    setServicios(nuevosServicios);
+    console.log('Eliminando servicio en el índice:', index);
   };
 
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-100 p-6">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md mb-6">
+    <div className="flex flex-col items-center min-h-screen bg-gray-200 p-6">
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg w-full max-w-xl mb-6">
+        {/* Cambia "max-w-xl" a la anchura máxima que desees para el formulario */}
         <div className="mb-4">
           <label htmlFor="nombreServicio" className="block text-gray-700 font-bold mb-2">
             Nombre del Servicio
@@ -56,18 +63,30 @@ const Services = () => {
         </button>
       </form>
 
-      <table className="table-auto w-full max-w-md bg-white rounded-lg shadow-lg">
+      <table className="table-auto w-full max-w-xl bg-white rounded-lg shadow-lg">
+        {/* Cambia "max-w-xl" a la anchura máxima que desees para la tabla */}
         <thead>
           <tr>
+            <th className="px-4 py-2">No.</th> {/* Nueva columna para el número de servicio */}
             <th className="px-4 py-2">Nombre del Servicio</th>
             <th className="px-4 py-2">Descripción</th>
+            <th className="px-4 py-2">Acciones</th>
           </tr>
         </thead>
         <tbody>
           {servicios.map((servicio, index) => (
             <tr key={index}>
+              <td className="border px-4 py-2">{index + 1}</td> {/* Número de servicio */}
               <td className="border px-4 py-2">{servicio.nombreServicio}</td>
               <td className="border px-4 py-2">{servicio.descripcion}</td>
+              <td className="border px-4 py-2">
+                <button onClick={() => handleEditar(index)} className="bg-blue-500 text-white px-4 py-2 rounded-lg mr-2">
+                  <FontAwesomeIcon icon={faEdit} /> {/* Icono de editar */}
+                </button>
+                <button onClick={() => handleEliminar(index)} className="bg-red-500 text-white px-4 py-2 rounded-lg">
+                  <FontAwesomeIcon icon={faTrash} /> {/* Icono de eliminar */}
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
