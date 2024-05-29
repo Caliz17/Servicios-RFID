@@ -1,16 +1,17 @@
-// src/api.js
-const API_URL = 'http://localhost:3001/api';
+// api.js
+const BASE_URL = 'http://localhost:3001/api';
 
-export const connectToAPI = async (endpoint) => {
-    try {
-      const response = await fetch(`http://localhost:3001/api${endpoint}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-      return Array.isArray(data) ? data : [];
-    } catch (error) {
-      console.error('No se pudo conectar a la API:', error);
-      return [];
-    }
-  };  
+export const connectToAPI = async (endpoint, data) => {
+  try {
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(data)
+    });
+    return await response.json();
+  } catch (error) {
+    throw new Error(`HTTP error! ${error}`);
+  }
+};
