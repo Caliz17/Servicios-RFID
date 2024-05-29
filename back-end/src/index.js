@@ -13,7 +13,7 @@ import Transferencia from './routes/Transferencia.routes.js';
 import Usuario from './routes/Usuario.routes.js';
 
 const app = express();
-const port = 3000;
+const port = 3001;
 
 app.use(express.json());
 
