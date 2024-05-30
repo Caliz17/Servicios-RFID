@@ -124,20 +124,30 @@ router.get('/transfer/:id', async (req, res) => {
  *         description: Error creando la transferencia
  */
 router.post('/newTransfer', async (req, res) => {
-    const { fecha_transferencia, monto_transferencia, cuenta_origen, cuenta_destino, id_usuario_autorizador } = req.body;
     try {
+        const { fecha_transferencia, monto_transferencia, cuenta_origen, cuenta_destino, id_usuario_autorizador } = req.body;
+        
+        if (!fecha_transferencia || !monto_transferencia || !cuenta_origen || !cuenta_destino || !id_usuario_autorizador) {
+            return res.status(400).json({ status: false, message: 'Missing required fields' });
+        }
+
+        // Parsear la fecha en formato ISO-8601
+        const fechaTransferenciaISO = new Date(fecha_transferencia).toISOString();
+
         const newTransferencia = await prisma.transferencia.create({
             data: {
-                fecha_transferencia,
+                fecha_transferencia: fechaTransferenciaISO,
                 monto_transferencia,
                 cuenta_origen,
                 cuenta_destino,
                 id_usuario_autorizador
             }
         });
+
         res.status(201).json({ status: true, message: 'Transfer created' });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to create transfer' });
+        console.error('Error creating transfer:', error);
+        res.status(500).json({ status: false, message: 'Failed to create transfer', error: error.message });
     }
 });
 
