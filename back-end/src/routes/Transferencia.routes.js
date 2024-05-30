@@ -61,12 +61,61 @@ const router = Router();
  */
 router.get('/transfers', async (req, res) => {
     try {
-        const transferencias = await prisma.transferencia.findMany();
-        res.json({ status: true, data: transferencias });
+        const transferencias = await prisma.transferencia.findMany({
+            include: {
+                cuentaOrigen: {
+                    include: {
+                        cliente: {
+                            select: {
+                                id_cliente: true, // Incluir el ID del cliente
+                                nombre: true // Nombre del cliente
+                            }
+                        }
+                    }
+                },
+                cuentaDestino: {
+                    include: {
+                        cliente: {
+                            select: {
+                                id_cliente: true, // Incluir el ID del cliente
+                                nombre: true // Nombre del cliente
+                            }
+                        }
+                    }
+                },
+                usuarioAutorizador: {
+                    select: {
+                        id_usuario: true, // Incluir el ID del usuario autorizador
+                        nombre_usuario: true // Nombre del usuario autorizador
+                    }
+                }
+            }
+        });
+
+        const transferenciasConNombres = transferencias.map(transferencia => ({
+            id_transferencia: transferencia.id_transferencia,
+            fecha_transferencia: transferencia.fecha_transferencia,
+            monto_transferencia: transferencia.monto_transferencia,
+            cuenta_origen: {
+                id_cuenta: transferencia.cuentaOrigen.id_cuenta, // ID de la cuenta de origen
+                nombre_cliente: transferencia.cuentaOrigen.cliente.nombre // Nombre del cliente de la cuenta de origen
+            },
+            cuenta_destino: {
+                id_cuenta: transferencia.cuentaDestino.id_cuenta, // ID de la cuenta de destino
+                nombre_cliente: transferencia.cuentaDestino.cliente.nombre // Nombre del cliente de la cuenta de destino
+            },
+            usuario_autorizador: {
+                id_usuario: transferencia.usuarioAutorizador.id_usuario, // ID del usuario autorizador
+                nombre_usuario: transferencia.usuarioAutorizador.nombre_usuario // Nombre del usuario autorizador
+            }
+        }));
+
+        res.json({ status: true, data: transferenciasConNombres });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to fetch transfers' });
+        res.status(500).json({ status: false, message: 'Failed to fetch transfers', error: error.message });
     }
 });
+
 
 /**
  * @swagger
