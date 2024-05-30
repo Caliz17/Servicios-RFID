@@ -50,9 +50,27 @@ const router = Router();
  */
 router.get('/users', async (req, res) => {
     try {
-        const usuarios = await prisma.usuario.findMany();
-        res.json({ status: true, data: usuarios });
+        const usuarios = await prisma.usuario.findMany({
+            include: {
+                rolUsuario: { // Esto incluye los datos de la tabla RolUsuario
+                    select: {
+                        nombre_rol: true,
+                    },
+                },
+            },
+        });
+
+        // Mapear los usuarios para reemplazar id_rol_usuario con nombre_rol
+        const usuariosConRol = usuarios.map(usuario => ({
+            id_usuario: usuario.id_usuario,
+            nombre_usuario: usuario.nombre_usuario,
+            contrasena: usuario.contrasena,
+            nombre_rol: usuario.rolUsuario.nombre_rol,
+        }));
+
+        res.json({ status: true, data: usuariosConRol });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ status: false, message: 'Failed to fetch users' });
     }
 });
@@ -194,7 +212,7 @@ router.delete('/deleteUser/:id', async (req, res) => {
         await prisma.usuario.delete({
             where: { id_usuario: parseInt(id) }
         });
-        res.status(204).json({ status: true, message: 'User deleted' });
+        res.status(200).json({ status: true, message: 'User deleted' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete user' });
     }

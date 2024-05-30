@@ -60,12 +60,37 @@ const router = Router();
  */
 router.get('/cuentas', async (req, res) => {
     try {
-        const cuentas = await prisma.cuenta.findMany();
-        res.json({status: true, data: cuentas});
+      const cuentas = await prisma.cuenta.findMany({
+        include: {
+          cliente: {
+            select: {
+              nombre: true,
+              apellido: true
+            }
+          },
+          tipoCuenta: {
+            select: {
+              nombre_tipo_cuenta: true
+            }
+          }
+        }
+      });
+      // Transformar los datos para que tengan el formato deseado
+      const cuentasTransformadas = cuentas.map(cuenta => ({
+        id_cuenta: cuenta.id_cuenta,
+        numero_cuenta: cuenta.numero_cuenta,
+        nombre_cliente: `${cuenta.cliente.nombre} ${cuenta.cliente.apellido}`,
+        nombre_tipo_cuenta: cuenta.tipoCuenta.nombre_tipo_cuenta,
+        saldo: cuenta.saldo,
+        estado: cuenta.estado
+      }));
+      res.json({ status: true, data: cuentasTransformadas });
     } catch (error) {
-        res.status(500).json({ error: 'Error fetching accounts' });
+      console.error('Error fetching accounts:', error);
+      res.status(500).json({ error: 'Error fetching accounts' });
     }
-});
+  });
+  
 
 /**
  * @swagger
