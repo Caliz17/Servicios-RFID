@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -217,5 +218,109 @@ router.delete('/deleteUser/:id', async (req, res) => {
         res.status(500).json({ status: false, message: 'Failed to delete user' });
     }
 });
+
+/**
+ * @swagger
+ * /api/login:
+ *   post:
+ *     summary: Inicia sesión para usuarios y clientes
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               username:
+ *                 type: string
+ *                 description: Nombre de usuario o correo electrónico
+ *               password:
+ *                 type: string
+ *                 description: Contraseña
+ *             example:
+ *               username: usuario1
+ *               password: password1
+ *     responses:
+ *       200:
+ *         description: Inicio de sesión exitoso
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: boolean
+ *                   description: Indica si el inicio de sesión fue exitoso o no
+ *                 userType:
+ *                   type: string
+ *                   description: Tipo de usuario (usuario o cliente)
+ *                 role:
+ *                   type: string
+ *                   description: Rol del usuario (solo para usuarios)
+ *                 message:
+ *                   type: string
+ *                   description: Mensaje de éxito
+ *       403:
+ *         description: La cuenta del cliente está inactiva
+ *       404:
+ *         description: Nombre de usuario o contraseña inválidos
+ *       500:
+ *         description: Error durante el inicio de sesión
+ */
+router.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    try {
+
+        if (!username || !password) {
+            return res.status(400).json({ status: false, message: 'Username and password are required' });
+        }
+        // Buscar usuario por nombre de usuario y contraseña
+        const user = await prisma.usuario.findFirst({
+            where: {
+                nombre_usuario: username,
+                contrasena: password
+            },
+            include: {
+                rolUsuario: true // Incluir el rol del usuario en la respuesta
+            }
+        });
+        
+        // Si se encontró un usuario, responder con éxito y generar token
+        if (user) {
+            const token = jwt.sign({ userId: user.id_usuario, userType: 'usuario' }, 'your-secret-key', { expiresIn: '1h' });
+            res.json({ status: true, token, userType: 'usuario', role: user.rolUsuario.nombre_rol, message: 'Login successful' });
+            return;
+        }
+
+        // Si no se encontró un usuario, buscar cliente por correo electrónico y contraseña
+        const cliente = await prisma.cliente.findFirst({
+            where: {
+                correo_electronico: username,
+                contrasenia: password
+            }
+        });
+
+        // Si se encontró un cliente y está activo, responder con éxito y generar token
+        if (cliente && cliente.estado === 1) {
+            const token = jwt.sign({ clientId: cliente.id_cliente, userType: 'cliente' }, 'your-secret-key', { expiresIn: '1h' });
+            res.json({ status: true, token, userType: 'cliente', message: 'Login successful' });
+            return;
+        }
+
+        // Si el cliente está inactivo, responder con error
+        if (cliente && cliente.estado === 0) {
+            res.status(403).json({ status: false, message: 'Client account is inactive' });
+            return;
+        }
+
+        // Si no se encontró ni usuario ni cliente, responder con error
+        res.status(404).json({ status: false, message: 'Invalid username or password' });
+    } catch (error) {
+        // Manejar errores
+        console.error(error);
+        res.status(500).json({ status: false, message: 'Error during login' });
+    }
+});
+
 
 export default router;
