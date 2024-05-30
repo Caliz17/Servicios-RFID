@@ -7,6 +7,7 @@ import TypeAccount from './Components/TypeAccount.js';
 import Clients from './Components/Customer.js';
 import UserRoles from './Components/RoleUser.js';
 import Users from './Components/Users.js';
+import AccountForm from './Components/Account.js';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path='/customer' element={<Clients/>} />
           <Route path='/roles' element={<UserRoles/>} />
           <Route path='/users' element={<Users/>} />
+          <Route path='/account' element={<AccountForm/>} />
         </Routes>
       </div>
     </Router>
