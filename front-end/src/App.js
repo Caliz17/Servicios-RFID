@@ -8,6 +8,7 @@ import Clients from './Components/Customer.js';
 import UserRoles from './Components/RoleUser.js';
 import Users from './Components/Users.js';
 import AccountForm from './Components/Account.js';
+import TransferForm from './Components/Transfer.js';
 
 function App() {
   return (
@@ -23,6 +24,7 @@ function App() {
           <Route path='/roles' element={<UserRoles/>} />
           <Route path='/users' element={<Users/>} />
           <Route path='/account' element={<AccountForm/>} />
+          <Route path='/transfer' element={<TransferForm/>} />
         </Routes>
       </div>
     </Router>
