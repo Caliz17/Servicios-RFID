@@ -6,6 +6,7 @@ import Services from './Components/Services.js';
 import TypeAccount from './Components/TypeAccount.js';
 import Clients from './Components/Customer.js';
 import UserRoles from './Components/RoleUser.js';
+import Users from './Components/Users.js';
 
 function App() {
   return (
@@ -19,6 +20,7 @@ function App() {
           <Route path='/typeAccount' element={<TypeAccount/>} />
           <Route path='/customer' element={<Clients/>} />
           <Route path='/roles' element={<UserRoles/>} />
+          <Route path='/users' element={<Users/>} />
         </Routes>
       </div>
     </Router>
