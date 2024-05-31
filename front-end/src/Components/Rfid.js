@@ -89,26 +89,28 @@ const RfidCardForm = () => {
         setEditCardId(null);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (id, rfidState) => {
         try {
+            const action = rfidState === 1 ? 'desactivar' : 'activar';
+            const endpoint = rfidState === 1 ? `/downCard/${id}` : `/upCard/${id}`;
             const result = await Swal.fire({
-                title: '¿Estás seguro que deseas desactivar esta tarjeta?',
-                text: 'Esta acción no se puede deshacer',
+                title: `¿Estás seguro que deseas ${action}lo! esta tarjeta?`,
+                text: 'Esta acción se puede deshacer',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: 'Sí, desactivar!'
+                confirmButtonText: `Sí, ${action}lo!`,
             });
 
             if (result.isConfirmed) {
-                const response = await connectToAPI(`/downCard/${id}`, {}, 'PUT');
+                const response = await connectToAPI(endpoint, {}, 'PUT');
                 if (response.status) {
-                    setAlert({ type: 'success', message: 'Tarjeta desactivada correctamente', show: true });
+                    setAlert({ type: 'success', message: `Tarjeta ${action}lo correctamente`, show: true });
                     fetchCards();
                 } else {
-                    console.error('Error al desactivar:', response.error);
-                    setAlert({ type: 'error', message: 'Error al desactivar', show: true });
+                    console.error(`Error al ${action}lo!`, response.error);
+                    setAlert({ type: 'error', message: `Error al ${action}lo!`, show: true });
                 }
             }
         } catch (error) {
@@ -222,8 +224,8 @@ const RfidCardForm = () => {
                             <tr key={card.id_tarjeta} className={index % 2 === 0 ? 'bg-gray-100' : ''}>
                                 <td className='py-2'>{card.id_tarjeta}</td>
                                 <td className="py-2">{card.numero_tarjeta}</td>
-                                <td className="py-2">{card.id_cuenta}</td>
-                                <td className="py-2">{card.fecha_asignacion}</td>
+                                <td className="py-2">{card.cuenta.numero_cuenta}</td>
+                                <td className="py-2">{new Date(card.fecha_asignacion).toLocaleDateString('es-ES').replace(/\//g, '-')}</td>
                                 <td className="py-2">{card.estado === 1 ? 'Activa' : 'Inactiva'}</td>
                                 <td className="py-2 text-center">
                                     <button
@@ -232,11 +234,8 @@ const RfidCardForm = () => {
                                     >
                                         <FontAwesomeIcon icon={faEdit} />
                                     </button>
-                                    <button
-                                        onClick={() => handleDelete(card.id_tarjeta)}
-                                        className="bg-red-500 text-white px-2 py-1 rounded-lg"
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
+                                    <button onClick={() => handleDelete(card.id_tarjeta, card.estado)} className={`px-2 py-1 rounded-lg ${card.estado === 1 ? 'bg-red-500' : 'bg-green-500'} text-white`}>
+                                        <FontAwesomeIcon icon={card.estado === 1 ? faThumbsDown : faThumbsUp} />
                                     </button>
                                 </td>
                             </tr>
