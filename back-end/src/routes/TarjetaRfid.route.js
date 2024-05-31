@@ -55,12 +55,27 @@ const router = Router();
  */
 router.get('/cards', async (req, res) => {
     try {
-        const tarjetas = await prisma.tarjetaRfid.findMany();
+        const tarjetas = await prisma.tarjetaRfid.findMany({
+            include: {
+                cuenta: {
+                    select: {
+                        numero_cuenta: true,
+                        cliente: {
+                            select: {
+                                nombre: true,
+                                apellido: true
+                            }
+                        }
+                    }
+                }
+            }
+        });
         res.json({ status: true, data: tarjetas });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to fetch RFID cards' });
     }
 });
+
 
 /**
  * @swagger
@@ -161,21 +176,35 @@ router.post('/newCard', async (req, res) => {
 router.put('/updateCard/:id', async (req, res) => {
     const { id } = req.params;
     const { numero_tarjeta, id_cuenta, fecha_asignacion, estado } = req.body;
+
+    // Validar y convertir fecha_asignacion a un objeto Date
+    let parsedFechaAsignacion;
+    try {
+        parsedFechaAsignacion = new Date(fecha_asignacion);
+        if (isNaN(parsedFechaAsignacion)) {
+            throw new Error('Invalid date format');
+        }
+    } catch (error) {
+        return res.status(400).json({ status: false, message: 'Invalid date format' });
+    }
+
     try {
         const updatedTarjeta = await prisma.tarjetaRfid.update({
             where: { id_tarjeta: parseInt(id) },
             data: {
                 numero_tarjeta,
                 id_cuenta,
-                fecha_asignacion,
+                fecha_asignacion: parsedFechaAsignacion,
                 estado
             }
         });
-        res.json({ status: true, message: 'RFID card updated'});
+        res.json({ status: true, message: 'RFID card updated' });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ status: false, message: 'Failed to update RFID card' });
     }
 });
+
 
 /**
  * @swagger
@@ -207,6 +236,39 @@ router.put('/downCard/:id', async (req, res) => {
         res.status(200).json({ status: true, message: 'RFID card down success' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete RFID card' });
+    }
+});
+
+/**
+ * @swagger
+ * /api/upCard/{id}:
+ *   put:
+ *     summary: Activa una tarjeta RFID existente
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: ID de la tarjeta RFID
+ *     responses:
+ *       200:
+ *         description: Tarjeta RFID activada
+ *       500:
+ *         description: Error activando la tarjeta RFID
+ */
+router.put('/upCard/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const updatedTarjeta = await prisma.tarjetaRfid.update({
+            where: { id_tarjeta: parseInt(id) },
+            data: {
+                estado: 1
+            }
+        });
+        res.status(200).json({ status: true, message: 'RFID card up success' });
+    } catch (error) {
+        res.status(500).json({ status: false, message: 'Failed to activate RFID card' });
     }
 });
 

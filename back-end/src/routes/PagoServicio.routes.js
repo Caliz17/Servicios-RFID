@@ -57,7 +57,20 @@ const router = Router();
  */
 router.get('/pagos', async (req, res) => {
     try {
-        const pagos = await prisma.pagoServicio.findMany();
+        const pagos = await prisma.pagoServicio.findMany({
+            include: {
+                cuenta: {
+                    select: {
+                        numero_cuenta: true
+                    }
+                },
+                tipoServicio:{
+                    select: {
+                        nombre_servicio: true
+                    }
+                }
+            }
+        });
         res.json({ status: true, data: pagos });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to fetch service payments' });
@@ -121,20 +134,34 @@ router.get('/pago/:id', async (req, res) => {
  */
 router.post('/newPay', async (req, res) => {
     const { fecha_pago, monto_pago, id_cuenta, id_tipo_servicio } = req.body;
+
+    // Convertir fecha_pago a un objeto Date
+    let parsedFechaPago;
+    try {
+        parsedFechaPago = new Date(fecha_pago);
+        if (isNaN(parsedFechaPago)) {
+            throw new Error('Invalid date format');
+        }
+    } catch (error) {
+        return res.status(400).json({ status: false, message: 'Invalid date format' });
+    }
+
     try {
         const newPago = await prisma.pagoServicio.create({
             data: {
-                fecha_pago,
-                monto_pago,
-                id_cuenta,
-                id_tipo_servicio
+                fecha_pago: parsedFechaPago,
+                monto_pago: parseFloat(monto_pago), 
+                id_cuenta: parseInt(id_cuenta), 
+                id_tipo_servicio: parseInt(id_tipo_servicio)
             }
         });
         res.status(201).json({ status: true, message: 'Service payment created' });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to create service payment' });
+        console.error(error); 
+        res.status(500).json({ status: false, message: 'Failed to create service payment', error: error.message });
     }
 });
+
 
 /**
  * @swagger
@@ -163,21 +190,58 @@ router.post('/newPay', async (req, res) => {
 router.put('/updatePay/:id', async (req, res) => {
     const { id } = req.params;
     const { fecha_pago, monto_pago, id_cuenta, id_tipo_servicio } = req.body;
+
+    // Validar y convertir fecha_pago a un objeto Date
+    let parsedFechaPago;
+    try {
+        parsedFechaPago = new Date(fecha_pago);
+        if (isNaN(parsedFechaPago)) {
+            throw new Error('Invalid date format');
+        }
+    } catch (error) {
+        return res.status(400).json({ status: false, message: 'Invalid date format' });
+    }
+
+    // Validar y convertir monto_pago a un número
+    let parsedMontoPago;
+    try {
+        parsedMontoPago = parseFloat(monto_pago);
+        if (isNaN(parsedMontoPago)) {
+            throw new Error('Invalid amount format');
+        }
+    } catch (error) {
+        return res.status(400).json({ status: false, message: 'Invalid amount format' });
+    }
+
+    // Validar y convertir id_cuenta e id_tipo_servicio a números
+    let parsedIdCuenta, parsedIdTipoServicio;
+    try {
+        parsedIdCuenta = parseInt(id_cuenta);
+        parsedIdTipoServicio = parseInt(id_tipo_servicio);
+        if (isNaN(parsedIdCuenta) || isNaN(parsedIdTipoServicio)) {
+            throw new Error('Invalid ID format');
+        }
+    } catch (error) {
+        return res.status(400).json({ status: false, message: 'Invalid ID format' });
+    }
+
     try {
         const updatedPago = await prisma.pagoServicio.update({
             where: { id_pago_servicio: parseInt(id) },
             data: {
-                fecha_pago,
-                monto_pago,
-                id_cuenta,
-                id_tipo_servicio
+                fecha_pago: parsedFechaPago,
+                monto_pago: parsedMontoPago,
+                id_cuenta: parsedIdCuenta,
+                id_tipo_servicio: parsedIdTipoServicio
             }
         });
         res.json({ status: true, message: 'Service payment updated' });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to update service payment' });
+        console.error(error); // Registrar el error en los logs
+        res.status(500).json({ status: false, message: 'Failed to update service payment', error: error.message });
     }
 });
+
 
 /**
  * @swagger
