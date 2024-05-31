@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
-
+const ID_USUARIO_FIJO = 1;
 /**
  * @swagger
  * components:
@@ -135,16 +136,21 @@ router.get('/card/:id', async (req, res) => {
 router.post('/newCard', async (req, res) => {
     const { numero_tarjeta, id_cuenta, fecha_asignacion, estado } = req.body;
     try {
+        // Formatear la fecha en formato ISO-8601
+        const formattedFechaAsignacion = new Date(fecha_asignacion).toISOString();
+        
         const newTarjeta = await prisma.tarjetaRfid.create({
             data: {
                 numero_tarjeta,
                 id_cuenta,
-                fecha_asignacion,
+                fecha_asignacion: formattedFechaAsignacion, // Usar la fecha formateada
                 estado
             }
         });
+        await registrarAuditoria('CREATE', 'TarjetaRfid', newTarjeta.id_tarjeta, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'RFID card created'});
     } catch (error) {
+        console.log(error);
         res.status(500).json({ status: false, message: 'Failed to create RFID card' });
     }
 });
@@ -198,6 +204,7 @@ router.put('/updateCard/:id', async (req, res) => {
                 estado
             }
         });
+        await registrarAuditoria('UPDATE', 'TarjetaRfid', updatedTarjeta.id_tarjeta, ID_USUARIO_FIJO);
         res.json({ status: true, message: 'RFID card updated' });
     } catch (error) {
         console.error(error);
@@ -233,6 +240,7 @@ router.put('/downCard/:id', async (req, res) => {
                 estado: 0
             }
         });
+        await registrarAuditoria('UPDATE', 'TarjetaRfid', updatedTarjeta.id_tarjeta, ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'RFID card down success' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete RFID card' });
@@ -266,6 +274,7 @@ router.put('/upCard/:id', async (req, res) => {
                 estado: 1
             }
         });
+        await registrarAuditoria('UPDATE', 'TarjetaRfid', updatedTarjeta.id_tarjeta, ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'RFID card up success' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to activate RFID card' });

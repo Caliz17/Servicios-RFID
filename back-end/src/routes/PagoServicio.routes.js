@@ -1,8 +1,8 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
-
+import { registrarAuditoria } from '../Auditoria.js';
 const router = Router();
-
+const ID_USUARIO_FIJO = 1;
 /**
  * @swagger
  * components:
@@ -155,6 +155,7 @@ router.post('/newPay', async (req, res) => {
                 id_tipo_servicio: parseInt(id_tipo_servicio)
             }
         });
+        await registrarAuditoria('CREATE', 'PagoServicio', newPago.id_pago_servicio, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'Service payment created' });
     } catch (error) {
         console.error(error); 
@@ -235,6 +236,7 @@ router.put('/updatePay/:id', async (req, res) => {
                 id_tipo_servicio: parsedIdTipoServicio
             }
         });
+        await registrarAuditoria('UPDATE', 'PagoServicio', updatedPago.id_pago_servicio, ID_USUARIO_FIJO);
         res.json({ status: true, message: 'Service payment updated' });
     } catch (error) {
         console.error(error); // Registrar el error en los logs
@@ -267,6 +269,7 @@ router.delete('/deletePay/:id', async (req, res) => {
         await prisma.pagoServicio.delete({
             where: { id_pago_servicio: parseInt(id) }
         });
+        await registrarAuditoria('DELETE', 'PagoServicio', id, ID_USUARIO_FIJO);
         res.status(204).json({ status: true, message: 'Service payment deleted' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete service payment' });

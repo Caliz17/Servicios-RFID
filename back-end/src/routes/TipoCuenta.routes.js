@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
+const ID_USUARIO_FIJO = 1;
 
 /**
  * @swagger
@@ -116,6 +118,7 @@ router.post('/newAccountType', async (req, res) => {
                 descripcion
             }
         });
+        await registrarAuditoria('CREATE', 'TipoCuenta', newTCuenta.id_tipo_cuenta, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'Account type created'});
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to create account type' });
@@ -157,6 +160,8 @@ router.put('/updateAccountType/:id', async (req, res) => {
                 descripcion
             }
         });
+
+        await registrarAuditoria('UPDATE', 'TipoCuenta', updatedTCuenta.id_tipo_cuenta, ID_USUARIO_FIJO);
         res.json({ status: true, message: 'Account type updated'});
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to update account type' });
@@ -187,6 +192,7 @@ router.delete('/deleteAccountType/:id', async (req, res) => {
         await prisma.tipoCuenta.delete({
             where: { id_tipo_cuenta: parseInt(id) }
         });
+        await registrarAuditoria('DELETE', 'TipoCuenta', parseInt(id), ID_USUARIO_FIJO);
         res.status(204).json({ status: true, message: 'Account type deleted' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete account type' });

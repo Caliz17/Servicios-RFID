@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
-
+const ID_USUARIO_FIJO = 1;
 /**
  * @swagger
  * components:
@@ -60,37 +61,37 @@ const router = Router();
  */
 router.get('/cuentas', async (req, res) => {
     try {
-      const cuentas = await prisma.cuenta.findMany({
-        include: {
-          cliente: {
-            select: {
-              nombre: true,
-              apellido: true
+        const cuentas = await prisma.cuenta.findMany({
+            include: {
+                cliente: {
+                    select: {
+                        nombre: true,
+                        apellido: true
+                    }
+                },
+                tipoCuenta: {
+                    select: {
+                        nombre_tipo_cuenta: true
+                    }
+                }
             }
-          },
-          tipoCuenta: {
-            select: {
-              nombre_tipo_cuenta: true
-            }
-          }
-        }
-      });
-      // Transformar los datos para que tengan el formato deseado
-      const cuentasTransformadas = cuentas.map(cuenta => ({
-        id_cuenta: cuenta.id_cuenta,
-        numero_cuenta: cuenta.numero_cuenta,
-        nombre_cliente: `${cuenta.cliente.nombre} ${cuenta.cliente.apellido}`,
-        nombre_tipo_cuenta: cuenta.tipoCuenta.nombre_tipo_cuenta,
-        saldo: cuenta.saldo,
-        estado: cuenta.estado
-      }));
-      res.json({ status: true, data: cuentasTransformadas });
+        });
+        // Transformar los datos para que tengan el formato deseado
+        const cuentasTransformadas = cuentas.map(cuenta => ({
+            id_cuenta: cuenta.id_cuenta,
+            numero_cuenta: cuenta.numero_cuenta,
+            nombre_cliente: `${cuenta.cliente.nombre} ${cuenta.cliente.apellido}`,
+            nombre_tipo_cuenta: cuenta.tipoCuenta.nombre_tipo_cuenta,
+            saldo: cuenta.saldo,
+            estado: cuenta.estado
+        }));
+        res.json({ status: true, data: cuentasTransformadas });
     } catch (error) {
-      console.error('Error fetching accounts:', error);
-      res.status(500).json({ error: 'Error fetching accounts' });
+        console.error('Error fetching accounts:', error);
+        res.status(500).json({ error: 'Error fetching accounts' });
     }
-  });
-  
+});
+
 
 /**
  * @swagger
@@ -121,7 +122,7 @@ router.get('/cuenta/:id', async (req, res) => {
             where: { id_cuenta: parseInt(id) }
         });
         if (cuenta) {
-            res.json({status: true, data: cuenta});
+            res.json({ status: true, data: cuenta });
         } else {
             res.status(404).json({ error: 'Account not found' });
         }
@@ -159,9 +160,10 @@ router.post('/newCuenta', async (req, res) => {
                 estado: estado !== undefined ? estado : 1 // Default to 1 if not provided
             }
         });
-        res.status(201).json({status: true, success: 'Account created'});
+        await registrarAuditoria('CREATE', 'Cuenta', newCuenta.id_cuenta, ID_USUARIO_FIJO);
+        res.status(201).json({ status: true, success: 'Account created' });
     } catch (error) {
-        res.status(500).json({status: false, error: 'Error creating account' });
+        res.status(500).json({ status: false, error: 'Error creating account' });
     }
 });
 
@@ -203,9 +205,11 @@ router.put('/updateCuenta/:id', async (req, res) => {
                 estado
             }
         });
-        res.json({status: true, success: 'Account updated'});
+
+        await registrarAuditoria('UPDATE', 'Cuenta', updatedCuenta.id_cuenta, ID_USUARIO_FIJO);
+        res.json({ status: true, success: 'Account updated' });
     } catch (error) {
-        res.status(500).json({status: false, error: 'Error updating account' });
+        res.status(500).json({ status: false, error: 'Error updating account' });
     }
 });
 
@@ -236,7 +240,9 @@ router.put('/downCuenta/:id', async (req, res) => {
                 estado: 0
             }
         });
-        res.status(202).json({status: true, success: 'Account down success' });
+
+        await registrarAuditoria('UPDATE', 'Cuenta', downAcount.id_cuenta, ID_USUARIO_FIJO);
+        res.status(202).json({ status: true, success: 'Account down success' });
     } catch (error) {
         res.status(500).json({ error: 'Error deleting account' });
     }
@@ -269,7 +275,9 @@ router.put('/upCuenta/:id', async (req, res) => {
                 estado: 1
             }
         });
-        res.status(202).json({status: true, success: 'Account up success' });
+
+        await registrarAuditoria('CREATE', 'Cuenta', upAcount.id_cuenta, ID_USUARIO_FIJO);
+        res.status(202).json({ status: true, success: 'Account up success' });
     } catch (error) {
         res.status(500).json({ error: 'Error deleting account' });
     }

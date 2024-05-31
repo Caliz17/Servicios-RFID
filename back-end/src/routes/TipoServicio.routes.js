@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
+const ID_USUARIO_FIJO = 1;
 
 /**
  * @swagger
@@ -116,6 +118,7 @@ router.post('/newTypeService', async (req, res) => {
                 descripcion
             }
         });
+        await registrarAuditoria('CREATE', 'TipoServicio', newTServicio.id_tipo_servicio, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'Service type created' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to create service type' });
@@ -157,6 +160,8 @@ router.put('/updateTypeService/:id', async (req, res) => {
                 descripcion
             }
         });
+
+        await registrarAuditoria('UPDATE', 'TipoServicio', updatedTServicio.id_tipo_servicio, ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'Service type updated' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to update service type' });
@@ -184,13 +189,23 @@ router.put('/updateTypeService/:id', async (req, res) => {
 router.delete('/deleteTypeService/:id', async (req, res) => {
     const { id } = req.params;
     try {
+        // Eliminar registros relacionados en PagoServicio
+        await prisma.pagoServicio.deleteMany({
+            where: { id_tipo_servicio: parseInt(id) }
+        });
+
+        // Luego eliminar el tipo de servicio
         await prisma.tipoServicio.delete({
             where: { id_tipo_servicio: parseInt(id) }
         });
+
+        await registrarAuditoria('DELETE', 'TipoServicio', parseInt(id), ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'Service type deleted' });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ status: false, message: 'Failed to delete service type' });
     }
 });
+
 
 export default router;

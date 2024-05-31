@@ -1,8 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
-
+const ID_USUARIO_FIJO = 1;
 /**
  * @swagger
  * components:
@@ -151,6 +152,7 @@ router.post('/newClient', async (req, res) => {
                 estado: estado !== undefined ? estado : 1 // Default to 1 if not provided
             }
         });
+        await registrarAuditoria('CREATE', 'Cliente', newCliente.id_cliente, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, success: 'Client created' });
     } catch (error) {
         res.status(500).json({ status: false, error: 'Error creating client' });
@@ -198,6 +200,7 @@ router.put('/updateClientes/:id', async (req, res) => {
                 estado
             }
         });
+        await registrarAuditoria('UPDATE', 'Cliente', updatedCliente.id_cliente, ID_USUARIO_FIJO);
         res.json({ status: true, success: 'Client updated' });
     } catch (error) {
         res.status(500).json({ status: false, error: 'Error updating client' });
@@ -231,6 +234,8 @@ router.put('/downClient/:id', async (req, res) => {
                 estado: 0
             }
         });
+
+        await registrarAuditoria('UPDATE', 'Cliente', downCliente.id_cliente, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, success: 'Client down success' });
     } catch (error) {
         res.status(500).json({ status: false, error: 'Error deleting client' });
@@ -264,6 +269,8 @@ router.put('/upClient/:id', async (req, res) => {
                 estado: 1
             }
         });
+
+        await registrarAuditoria('UPDATE', 'Cliente', upCliente.id_cliente, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, success: 'Client up success' });
     } catch (error) {
         res.status(500).json({ status: false, error: 'Error deleting client' });
