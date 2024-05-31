@@ -11,6 +11,7 @@ import AccountForm from './Components/Account.js';
 import TransferForm from './Components/Transfer.js';
 import PayServiceForm from './Components/Pagos.js';
 import RfidCardForm from './Components/Rfid.js';
+import AuditoriaTable from './Components/Auditoria.js';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
           <Route path='/users' element={<Users />} />
           <Route path='/account' element={<AccountForm />} />
           <Route path='/transfer' element={<TransferForm />} />
+          <Route path='/actions' element={<AuditoriaTable />} />
         </Routes>
       </div>
     </Router>
