@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faCogs, faUsers, faCartShopping, faUsersCog, faFileInvoice } from '@fortawesome/free-solid-svg-icons';
+import { faHome, faCogs, faUsers, faCartShopping, faUsersCog, faFileInvoice, faCreditCard  } from '@fortawesome/free-solid-svg-icons';
 
 
 const Dropdown = ({ title, icon, items }) => {
@@ -75,7 +75,12 @@ const Navbar = () => {
                 <Dropdown
                   title="Compra"
                   icon={faCartShopping}
-                  items={[{ label: 'Acerca de', href: '/about' }]}
+                  items={[{ label: 'Pago Servicio', href: '/payService' }]}
+                />
+                <Dropdown
+                  title="RFID"
+                  icon={faCreditCard}
+                  items={[{ label: 'Control de Tarjetas', href: '/cardRfid' }]}
                 />
                 <Dropdown
                   title="Servicios"
