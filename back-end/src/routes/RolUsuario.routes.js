@@ -1,7 +1,10 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js'; // Importa la función de auditoría
 
 const router = Router();
+// Definir el ID de usuario fijo
+const ID_USUARIO_FIJO = 1;
 
 /**
  * @swagger
@@ -32,7 +35,7 @@ const router = Router();
  * @swagger
  * /api/roles:
  *   get:
- *     summary: Lista todos los roles de usuario
+ *     summary: Obtiene todos los roles de usuario
  *     responses:
  *       200:
  *         description: Lista de roles de usuario
@@ -48,47 +51,10 @@ router.get('/roles', async (req, res) => {
         const roles = await prisma.rolUsuario.findMany();
         res.json({ status: true, data: roles });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to fetch roles' });
+        res.status(500).json({ status: false, message: 'Error al obtener los roles' });
     }
 });
 
-/**
- * @swagger
- * /api/rol/{id}:
- *   get:
- *     summary: Obtiene un rol de usuario por su ID
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *         description: ID del rol de usuario
- *     responses:
- *       200:
- *         description: Rol de usuario encontrado
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/RolUsuario'
- *       404:
- *         description: Rol de usuario no encontrado
- */
-router.get('/rol/:id', async (req, res) => {
-    const { id } = req.params;
-    try {
-        const role = await prisma.rolUsuario.findUnique({
-            where: { id_rol_usuario: parseInt(id) }
-        });
-        if (role) {
-            res.json({ status: true, data: role });
-        } else {
-            res.status(404).json({ status: false, message: 'Role not found' });
-        }
-    } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to fetch role' });
-    }
-});
 
 /**
  * @swagger
@@ -103,9 +69,9 @@ router.get('/rol/:id', async (req, res) => {
  *             $ref: '#/components/schemas/RolUsuario'
  *     responses:
  *       201:
- *         description: Rol de usuario creado
+ *         description: Rol de usuario creado exitosamente
  *       500:
- *         description: Error creando el rol de usuario
+ *         description: Error al crear el rol de usuario
  */
 router.post('/newRoles', async (req, res) => {
     const { nombre_rol, descripcion } = req.body;
@@ -116,9 +82,13 @@ router.post('/newRoles', async (req, res) => {
                 descripcion
             }
         });
-        res.status(201).json({ status: true, message: 'Role created' });
+
+        // Registra la auditoría
+        await registrarAuditoria('CREATE', 'rolUsuario', newRole.id_rol_usuario, ID_USUARIO_FIJO);
+
+        res.status(201).json({ status: true, message: 'Rol creado correctamente' });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to create role' });
+        res.status(500).json({ status: false, message: 'Error al crear el rol' });
     }
 });
 
@@ -142,9 +112,9 @@ router.post('/newRoles', async (req, res) => {
  *             $ref: '#/components/schemas/RolUsuario'
  *     responses:
  *       200:
- *         description: Rol de usuario actualizado
+ *         description: Rol de usuario actualizado exitosamente
  *       500:
- *         description: Error actualizando el rol de usuario
+ *         description: Error al actualizar el rol de usuario
  */
 router.put('/updateRole/:id', async (req, res) => {
     const { id } = req.params;
@@ -157,9 +127,13 @@ router.put('/updateRole/:id', async (req, res) => {
                 descripcion
             }
         });
-        res.json({ status: true, message: 'Role updated' });
+
+        // Registra la auditoría
+        await registrarAuditoria('UPDATE', 'rolUsuario', parseInt(id), ID_USUARIO_FIJO);
+
+        res.json({ status: true, message: 'Rol actualizado correctamente' });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to update role' });
+        res.status(500).json({ status: false, message: 'Error al actualizar el rol' });
     }
 });
 
@@ -177,9 +151,9 @@ router.put('/updateRole/:id', async (req, res) => {
  *         description: ID del rol de usuario
  *     responses:
  *       200:
- *         description: Rol de usuario eliminado
+ *         description: Rol de usuario eliminado exitosamente
  *       500:
- *         description: Error eliminando el rol de usuario
+ *         description: Error al eliminar el rol de usuario
  */
 router.delete('/deleteRole/:id', async (req, res) => {
     const { id } = req.params;
@@ -187,9 +161,13 @@ router.delete('/deleteRole/:id', async (req, res) => {
         await prisma.rolUsuario.delete({
             where: { id_rol_usuario: parseInt(id) }
         });
-        res.json({ status: true, message: 'Role deleted' });
+
+        // Registra la auditoría
+        await registrarAuditoria('DELETE', 'rolUsuario', parseInt(id), ID_USUARIO_FIJO);
+
+        res.json({ status: true, message: 'Rol eliminado correctamente' });
     } catch (error) {
-        res.status(500).json({ status: false, message: 'Failed to delete role' });
+        res.status(500).json({ status: false, message: 'Error al eliminar el rol' });
     }
 });
 
