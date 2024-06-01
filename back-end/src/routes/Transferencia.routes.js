@@ -175,32 +175,77 @@ router.get('/transfer/:id', async (req, res) => {
  *         description: Error creando la transferencia
  */
 router.post('/newTransfer', async (req, res) => {
-    try {
-        const { fecha_transferencia, monto_transferencia, cuenta_origen, cuenta_destino, id_usuario_autorizador } = req.body;
+    const { fecha_transferencia, monto_transferencia, cuenta_origen, cuenta_destino, id_usuario_autorizador } = req.body;
 
-        if (!fecha_transferencia || !monto_transferencia || !cuenta_origen || !cuenta_destino || !id_usuario_autorizador) {
-            return res.status(400).json({ status: false, message: 'Missing required fields' });
+    if (!fecha_transferencia || !monto_transferencia || !cuenta_origen || !cuenta_destino || !id_usuario_autorizador) {
+        return res.status(200).json({ status: false, message: 'Faltan campos obligatorios' });
+    }
+
+    // Verificar que la cuenta origen y la cuenta destino no sean la misma
+    if (cuenta_origen === cuenta_destino) {
+        return res.status(200).json({ status: false, message: 'No se puede transferir a la misma cuenta' });
+    }
+
+    const fechaTransferenciaISO = new Date(fecha_transferencia).toISOString();
+
+    try {
+        // Obtener los detalles de las cuentas origen y destino
+        const cuentaOrigen = await prisma.cuenta.findUnique({ where: { id_cuenta: cuenta_origen } });
+        const cuentaDestino = await prisma.cuenta.findUnique({ where: { id_cuenta: cuenta_destino } });
+
+        if (!cuentaOrigen || !cuentaDestino) {
+            return res.status(404).json({ status: false, message: 'Cuenta no encontrada' });
         }
 
-        // Parsear la fecha en formato ISO-8601
-        const fechaTransferenciaISO = new Date(fecha_transferencia).toISOString();
+        // Verificar si las cuentas están activas
+        if (cuentaOrigen.estado !== 1 || cuentaDestino.estado !== 1) {
+            return res.status(200).json({ status: false, message: 'Una o ambas cuentas están inactivas' });
+        }
 
-        const newTransferencia = await prisma.transferencia.create({
-            data: {
-                fecha_transferencia: fechaTransferenciaISO,
-                monto_transferencia,
-                cuenta_origen,
-                cuenta_destino,
-                id_usuario_autorizador
-            }
+        // Verificar si hay fondos suficientes en la cuenta origen
+        if (cuentaOrigen.saldo < monto_transferencia) {
+            return res.status(200).json({ status: false, message: 'Fondos insuficientes' });
+        }
+
+        // Iniciar una transacción
+        const result = await prisma.$transaction(async (prisma) => {
+            // Crear la transferencia
+            const newTransferencia = await prisma.transferencia.create({
+                data: {
+                    fecha_transferencia: fechaTransferenciaISO,
+                    monto_transferencia,
+                    cuenta_origen,
+                    cuenta_destino,
+                    id_usuario_autorizador
+                }
+            });
+
+            // Actualizar saldos de las cuentas
+            await prisma.cuenta.update({
+                where: { id_cuenta: cuenta_origen },
+                data: { saldo: { decrement: monto_transferencia } }
+            });
+
+            await prisma.cuenta.update({
+                where: { id_cuenta: cuenta_destino },
+                data: { saldo: { increment: monto_transferencia } }
+            });
+
+            // Registrar auditoría
+            await registrarAuditoria('CREATE', 'Transferencia', newTransferencia.id_transferencia, id_usuario_autorizador);
+
+            return newTransferencia;
         });
-        await registrarAuditoria('CREATE', 'Transferencia', newTransferencia.id_transferencia, ID_USUARIO_FIJO);
-        res.status(201).json({ status: true, message: 'Transfer created' });
+
+        res.status(201).json({ status: true, message: 'Transferencia creada' });
     } catch (error) {
-        console.error('Error creating transfer:', error);
-        res.status(500).json({ status: false, message: 'Failed to create transfer', error: error.message });
+        console.error('Error al crear la transferencia:', error);
+        res.status(500).json({ status: false, message: 'Error al crear la transferencia', error: error.message });
     }
 });
+
+
+
 
 /**
  * @swagger
