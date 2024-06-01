@@ -140,6 +140,9 @@ router.get('/cliente/:id', async (req, res) => {
 router.post('/newClient', async (req, res) => {
     const { nombre, apellido, direccion, telefono, correo_electronico, contrasenia, perfil, estado } = req.body;
     try {
+        // Utilizando prisma.$queryRaw para cifrar la contraseña directamente en PostgreSQL
+        const hashedPassword = await prisma.$queryRaw`SELECT crypt(${contrasenia}, gen_salt('bf')) AS hashed_password`;
+
         const newCliente = await prisma.cliente.create({
             data: {
                 nombre,
@@ -147,7 +150,7 @@ router.post('/newClient', async (req, res) => {
                 direccion,
                 telefono,
                 correo_electronico,
-                contrasenia,
+                contrasenia: hashedPassword[0].hashed_password,
                 perfil,
                 estado: estado !== undefined ? estado : 1 // Default to 1 if not provided
             }
@@ -187,6 +190,9 @@ router.put('/updateClientes/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre, apellido, direccion, telefono, correo_electronico, contrasenia, perfil, estado } = req.body;
     try {
+        // Utilizando prisma.$queryRaw para cifrar la contraseña directamente en PostgreSQL
+        const hashedPassword = await prisma.$queryRaw`SELECT crypt(${contrasenia}, gen_salt('bf')) AS hashed_password`;
+
         const updatedCliente = await prisma.cliente.update({
             where: { id_cliente: parseInt(id) },
             data: {
@@ -195,7 +201,7 @@ router.put('/updateClientes/:id', async (req, res) => {
                 direccion,
                 telefono,
                 correo_electronico,
-                contrasenia,
+                contrasenia: hashedPassword[0].hashed_password,
                 perfil,
                 estado
             }

@@ -63,11 +63,10 @@ router.get('/users', async (req, res) => {
             },
         });
 
-        // Mapear los usuarios para reemplazar id_rol_usuario con nombre_rol
+        // Mapear los usuarios para reemplazar id_rol_usuario con nombre_rol y omitir la contraseña
         const usuariosConRol = usuarios.map(usuario => ({
             id_usuario: usuario.id_usuario,
             nombre_usuario: usuario.nombre_usuario,
-            contrasena: usuario.contrasena,
             nombre_rol: usuario.rolUsuario.nombre_rol,
         }));
 
@@ -136,19 +135,24 @@ router.get('/user/:id', async (req, res) => {
 router.post('/newUser', async (req, res) => {
     const { nombre_usuario, contrasena, id_rol_usuario } = req.body;
     try {
+        // Utilizando prisma.$queryRaw para cifrar la contraseña directamente en PostgreSQL
+        const hashedPassword = await prisma.$queryRaw`SELECT crypt(${contrasena}, gen_salt('bf')) AS hashed_password`;
+
         const newUser = await prisma.usuario.create({
             data: {
                 nombre_usuario,
-                contrasena,
+                contrasena: hashedPassword[0].hashed_password,
                 id_rol_usuario
             }
         });
+
         await registrarAuditoria('CREATE', 'Usuario', newUser.id_usuario, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'User created' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to create user' });
     }
 });
+
 
 /**
  * @swagger
@@ -178,11 +182,12 @@ router.put('/updateUser/:id', async (req, res) => {
     const { id } = req.params;
     const { nombre_usuario, contrasena, id_rol_usuario } = req.body;
     try {
+        const hashedPassword = await prisma.$queryRaw`SELECT crypt(${contrasena}, gen_salt('bf')) AS hashed_password`;
         const updatedUser = await prisma.usuario.update({
             where: { id_usuario: parseInt(id) },
             data: {
                 nombre_usuario,
-                contrasena,
+                contrasena: hashedPassword[0].hashed_password,
                 id_rol_usuario
             }
         });
