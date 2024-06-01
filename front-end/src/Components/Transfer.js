@@ -34,38 +34,38 @@ const TransferForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const endpoint = editTransferId ? `/updateTransfer/${editTransferId}` : '/newTransfer';
-        const method = editTransferId ? 'PUT' : 'POST';
+        const endpoint = '/newTransfer';
+        const method = 'POST';
         try {
             const response = await connectToAPI(endpoint, {
                 id_transferencia: editTransferId,
                 fecha_transferencia: fechaTransferencia,
-                monto_transferencia: parseInt(montoTransferencia),
+                monto_transferencia: parseFloat(montoTransferencia),
                 cuenta_origen: parseInt(cuentaOrigenId),
                 cuenta_destino: parseInt(cuentaDestinoId),
                 id_usuario_autorizador: parseInt(idUsuarioAutorizador)
             }, method);
             if (response.status) {
-                setAlert({ type: 'success', message: 'Operación exitosa', show: true });
+                setAlert({ type: 'success', message: '¡Transferencia realizada con éxito!', show: true });
                 fetchTransfers();
                 handleCancel();
             } else {
-                console.error('Error al registrar/actualizar:', response.error);
-                setAlert({ type: 'error', message: 'Error en la operación', show: true });
+                // Mostrar mensajes específicos del backend en SweetAlert
+                let errorMessage = 'Error en la operación';
+                if (response.message) {
+                    errorMessage = response.message;
+                }
+                // Mostrar el mensaje de error en SweetAlert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMessage
+                });
             }
         } catch (error) {
             console.error('Error al conectar con la API:', error);
             setAlert({ type: 'error', message: 'Error al conectar con la API', show: true });
         }
-    };
-
-    const handleEdit = (transfer) => {
-        setFechaTransferencia(transfer.fecha_transferencia || '');
-        setMontoTransferencia((transfer.monto_transferencia || '').toString());
-        setCuentaOrigenId((transfer.cuenta_origen && transfer.cuenta_origen.id_cuenta) ? transfer.cuenta_origen.id_cuenta.toString() : '');
-        setCuentaDestinoId((transfer.cuenta_destino && transfer.cuenta_destino.id_cuenta) ? transfer.cuenta_destino.id_cuenta.toString() : '');
-        setIdUsuarioAutorizador((transfer.id_usuario_autorizador || '').toString());
-        setEditTransferId(transfer.id_transferencia);
     };
 
 
@@ -96,8 +96,7 @@ const TransferForm = () => {
                     setAlert({ type: 'success', message: 'Transferencia eliminada correctamente', show: true });
                     fetchTransfers();
                 } else {
-                    console.error('Error al eliminar:', response.error);
-                    setAlert({ type: 'error', message: 'Error al eliminar', show: true });
+                    setAlert({ type: 'error', message: response.message || 'Error al eliminar', show: true });
                 }
             }
         } catch (error) {
@@ -111,7 +110,7 @@ const TransferForm = () => {
             {alert.show && <Alert type={alert.type} message={alert.message} />}
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg w-4/5 mb-6">
                 <h2 className="text-2xl font-bold mb-6">
-                    <FontAwesomeIcon icon={faSquarePlus} /> {editTransferId ? 'Editar Transferencia' : 'Nueva Transferencia'}
+                    <FontAwesomeIcon icon={faSquarePlus} /> Nueva Transferencia
                 </h2>
                 <div className="mb-4">
                     <label htmlFor="fechaTransferencia" className="block text-gray-700 font-bold mb-2">
@@ -166,7 +165,6 @@ const TransferForm = () => {
                     />
                 </div>
                 <div className="mb-4">
-
                     <label htmlFor="idUsuarioAutorizador" className="block text-gray-700 font-bold mb-2">
                         ID de Usuario Autorizador
                     </label>
@@ -181,7 +179,7 @@ const TransferForm = () => {
                 </div>
                 <div className="flex justify-end">
                     <button type="submit" className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:bg-blue-700">
-                        {editTransferId ? 'Actualizar' : 'Enviar'}
+                        Transferir
                     </button>
                     <button type="button" onClick={handleCancel} className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-700 focus:outline-none focus:bg-gray-700 ml-2">
                         Cancelar
@@ -212,9 +210,6 @@ const TransferForm = () => {
                                 <td className="border px-4 py-2">{transfer.cuenta_destino.nombre_cliente}</td>
                                 <td className="border px-4 py-2">{transfer.usuario_autorizador.nombre_usuario}</td>
                                 <td className="border px-4 py-2 text-center">
-                                    <button onClick={() => handleEdit(transfer)} className="bg-blue-500 text-white px-2 py-1 mr-1 rounded-lg">
-                                        <FontAwesomeIcon icon={faEdit} />
-                                    </button>
                                     <button onClick={() => handleDelete(transfer.id_transferencia)} className="bg-red-500 text-white px-2 py-1 rounded-lg">
                                         <FontAwesomeIcon icon={faTrash} />
                                     </button>
@@ -229,3 +224,4 @@ const TransferForm = () => {
 };
 
 export default TransferForm;
+
