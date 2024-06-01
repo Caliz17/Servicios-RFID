@@ -16,6 +16,7 @@ const PayServiceForm = () => {
     const [alert, setAlert] = useState({ type: '', message: '', show: false });
     const [scanning, setScanning] = useState(false);
     const [rfidCardNumber, setRfidCardNumber] = useState('');
+    const [ledStatus, setLedStatus] = useState('');
 
     const fetchAccounts = async () => {
         try {
@@ -64,8 +65,7 @@ const PayServiceForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Fetch the RFID card data
+    
         let selectedAccount = null;
         try {
             const response = await connectToAPI(`/cards`);
@@ -78,15 +78,15 @@ const PayServiceForm = () => {
         } catch (error) {
             console.error('Error al conectar con la API:', error);
         }
-
+    
         if (!selectedAccount) {
             setAlert({ type: 'error', message: 'No se encontró una cuenta asociada con este RFID', show: true });
             return;
         }
-
+    
         const endpoint = editPayId ? `/updatePay/${editPayId}` : '/newPay';
         const method = editPayId ? 'PUT' : 'POST';
-
+    
         try {
             const data = {
                 fecha_pago: fechaPago,
@@ -98,6 +98,7 @@ const PayServiceForm = () => {
             if (response.status) {
                 setAlert({ type: 'success', message: 'Operación exitosa', show: true });
                 fetchPays();
+                handleSuccessfulPayment(); // Llamar a la función para encender el LED
                 handleCancel();
             } else {
                 console.error('Error al registrar/actualizar:', response.error);
@@ -108,7 +109,20 @@ const PayServiceForm = () => {
             setAlert({ type: 'error', message: 'Error al conectar con la API', show: true });
         }
     };
-
+    
+    const handleSuccessfulPayment = async () => {
+        try {
+            // Envía la solicitud HTTP al ESP32 para encender el LED
+            const response = await fetch('http://192.168.0.22/led?action=on');
+            if (response.ok) {
+                console.log('LED encendido correctamente');
+            } else {
+                console.error('Error al encender el LED:', response.statusText);
+            }
+        } catch (error) {
+            console.error('Error al conectar con el ESP32:', error);
+        }
+    };
     const handleEdit = (pay) => {
         setFechaPago(pay.fecha_pago || '');
         setMontoPago(pay.monto_pago ? pay.monto_pago.toString() : '');
@@ -161,7 +175,7 @@ const PayServiceForm = () => {
             willOpen: () => {
                 setScanning(true);
                 const startTime = Date.now();
-                let socket = new WebSocket("ws://192.168.0.22:81/");
+                let socket = new WebSocket("ws://192.168.1.110:81/");
 
                 socket.onopen = () => {
                     console.log("WebSocket connected");
@@ -204,6 +218,7 @@ const PayServiceForm = () => {
         <div className="flex flex-col items-center min-h-screen bg-gray-200 p-6">
             {alert.show && <Alert type={alert.type} message={alert.message} />}
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-lg w-4/5 mb-6">
+            {ledStatus && <p>{ledStatus}</p>}
                 <h2 className="text-2xl font-bold mb-6">
                     <FontAwesomeIcon icon={faSquarePlus} /> {editPayId ? 'Editar Pago de Servicio' : 'Nuevo Pago de Servicio'}
                 </h2>

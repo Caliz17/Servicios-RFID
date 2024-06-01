@@ -197,6 +197,10 @@ router.post('/newTransfer', async (req, res) => {
             return res.status(404).json({ status: false, message: 'Cuenta no encontrada' });
         }
 
+        if (monto_transferencia <= 0) {
+            return res.status(200).json({ status: false, message: 'El monto no puede ser negativo o 0' });
+        }
+
         // Verificar si las cuentas están activas
         if (cuentaOrigen.estado !== 1 || cuentaDestino.estado !== 1) {
             return res.status(200).json({ status: false, message: 'Una o ambas cuentas están inactivas' });

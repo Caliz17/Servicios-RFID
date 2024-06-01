@@ -129,7 +129,7 @@ const RfidCardForm = () => {
             willOpen: () => {
                 setScanning(true);
                 const startTime = Date.now();
-                let socket = new WebSocket("ws://192.168.0.22:81/");
+                let socket = new WebSocket("ws://192.168.1.110:81/");
 
                 socket.onopen = () => {
                     console.log("WebSocket connected");
