@@ -18,7 +18,7 @@ const RfidCardForm = () => {
 
     const fetchAccounts = async () => {
         try {
-            const response = await connectToAPI('/cuentas');
+            const response = await connectToAPI('/cuentasActivas');
             if (response.status) {
                 setAccounts(response.data);
             } else {
@@ -146,7 +146,7 @@ const RfidCardForm = () => {
                     socket.close();
 
                     // Reiniciar el ESP32
-                    fetch('/reset') 
+                    fetch('/reset')
                         .then(() => console.log('ESP32 reiniciado'))
                         .catch(error => console.error('Error al reiniciar el ESP32:', error));
                 };
@@ -212,7 +212,7 @@ const RfidCardForm = () => {
                         <option value="">Seleccione una cuenta</option>
                         {accounts.map((account) => (
                             <option key={account.id_cuenta} value={account.id_cuenta}>
-                                {account.numero_cuenta}
+                                {account.nombre_cliente} - {account.numero_cuenta}
                             </option>
                         ))}
                     </select>
