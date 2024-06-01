@@ -64,7 +64,7 @@ router.get('/pagos', async (req, res) => {
                         numero_cuenta: true
                     }
                 },
-                tipoServicio:{
+                tipoServicio: {
                     select: {
                         nombre_servicio: true
                     }
@@ -147,21 +147,48 @@ router.post('/newPay', async (req, res) => {
     }
 
     try {
+        // Consultar el saldo de la cuenta
+        const cuenta = await prisma.cuenta.findUnique({
+            where: { id_cuenta: parseInt(id_cuenta) },
+            select: { saldo: true }
+        });
+
+        if (!cuenta) {
+            return res.status(404).json({ status: false, message: 'Account not found' });
+        }
+
+        // Verificar si la cuenta tiene fondos suficientes
+        const saldoActual = cuenta.saldo;
+        const montoPago = parseFloat(monto_pago);
+
+        if (saldoActual < montoPago) {
+            return res.status(200).json({ status: false, message: 'Insufficient funds' });
+        }
+
+        // Actualizar el saldo de la cuenta
+        const updatedCuenta = await prisma.cuenta.update({
+            where: { id_cuenta: parseInt(id_cuenta) },
+            data: { saldo: saldoActual - montoPago }
+        });
+
+        // Registrar el pago
         const newPago = await prisma.pagoServicio.create({
             data: {
                 fecha_pago: parsedFechaPago,
-                monto_pago: parseFloat(monto_pago), 
-                id_cuenta: parseInt(id_cuenta), 
+                monto_pago: montoPago,
+                id_cuenta: parseInt(id_cuenta),
                 id_tipo_servicio: parseInt(id_tipo_servicio)
             }
         });
+
         await registrarAuditoria('CREATE', 'PagoServicio', newPago.id_pago_servicio, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'Service payment created' });
     } catch (error) {
-        console.error(error); 
+        console.error(error);
         res.status(500).json({ status: false, message: 'Failed to create service payment', error: error.message });
     }
 });
+
 
 
 /**

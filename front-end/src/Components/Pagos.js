@@ -2,19 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { connectToAPI } from '../api.js';
 import Swal from 'sweetalert2';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faThumbsDown, faThumbsUp, faSquarePlus, faListCheck } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faSquarePlus, faListCheck } from '@fortawesome/free-solid-svg-icons';
 import Alert from '../layouts/Alert.js';
 
 const PayServiceForm = () => {
     const [fechaPago, setFechaPago] = useState('');
     const [montoPago, setMontoPago] = useState('');
-    const [idCuenta, setIdCuenta] = useState('');
     const [idTipoServicio, setIdTipoServicio] = useState('');
     const [pays, setPays] = useState([]);
     const [accounts, setAccounts] = useState([]);
     const [serviceTypes, setServiceTypes] = useState([]);
     const [editPayId, setEditPayId] = useState(null);
     const [alert, setAlert] = useState({ type: '', message: '', show: false });
+    const [scanning, setScanning] = useState(false);
+    const [rfidCardNumber, setRfidCardNumber] = useState('');
 
     const fetchAccounts = async () => {
         try {
@@ -63,6 +64,26 @@ const PayServiceForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Fetch the RFID card data
+        let selectedAccount = null;
+        try {
+            const response = await connectToAPI(`/cards`);
+            if (response.status) {
+                const accounts = Array.isArray(response.data) ? response.data : [];
+                selectedAccount = accounts.find(account => account.numero_tarjeta === rfidCardNumber);
+            } else {
+                console.error('Error al obtener la cuenta:', response.error);
+            }
+        } catch (error) {
+            console.error('Error al conectar con la API:', error);
+        }
+
+        if (!selectedAccount) {
+            setAlert({ type: 'error', message: 'No se encontró una cuenta asociada con este RFID', show: true });
+            return;
+        }
+
         const endpoint = editPayId ? `/updatePay/${editPayId}` : '/newPay';
         const method = editPayId ? 'PUT' : 'POST';
 
@@ -70,7 +91,7 @@ const PayServiceForm = () => {
             const data = {
                 fecha_pago: fechaPago,
                 monto_pago: parseFloat(montoPago),
-                id_cuenta: parseInt(idCuenta, 10),
+                id_cuenta: selectedAccount.id_cuenta,
                 id_tipo_servicio: parseInt(idTipoServicio, 10)
             };
             const response = await connectToAPI(endpoint, data, method);
@@ -91,7 +112,6 @@ const PayServiceForm = () => {
     const handleEdit = (pay) => {
         setFechaPago(pay.fecha_pago || '');
         setMontoPago(pay.monto_pago ? pay.monto_pago.toString() : '');
-        setIdCuenta(pay.id_cuenta ? pay.id_cuenta.toString() : '');
         setIdTipoServicio(pay.id_tipo_servicio ? pay.id_tipo_servicio.toString() : '');
         setEditPayId(pay.id_pago_servicio);
     };
@@ -99,7 +119,6 @@ const PayServiceForm = () => {
     const handleCancel = () => {
         setFechaPago('');
         setMontoPago('');
-        setIdCuenta('');
         setIdTipoServicio('');
         setEditPayId(null);
     };
@@ -130,6 +149,55 @@ const PayServiceForm = () => {
             console.error('Error al conectar con la API:', error);
             setAlert({ type: 'error', message: 'Error al conectar con la API', show: true });
         }
+    };
+
+    const handleScan = () => {
+        Swal.fire({
+            title: 'Escaneando',
+            text: 'Por favor, acerque la tarjeta al lector...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: false,
+            willOpen: () => {
+                setScanning(true);
+                const startTime = Date.now();
+                let socket = new WebSocket("ws://192.168.0.22:81/");
+
+                socket.onopen = () => {
+                    console.log("WebSocket connected");
+                };
+
+                socket.onmessage = (event) => {
+                    console.log("UID recibido: " + event.data);
+                    setRfidCardNumber(event.data);
+                    setScanning(false);
+                    Swal.close();
+                    const endTime = Date.now();
+                    console.log(`Tiempo total: ${endTime - startTime} ms`);
+                    socket.close();
+
+                    // Reiniciar el ESP32
+                    fetch('/reset')
+                        .then(() => console.log('ESP32 reiniciado'))
+                        .catch(error => console.error('Error al reiniciar el ESP32:', error));
+                };
+
+                socket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    setScanning(false);
+                    Swal.fire('Error', 'Error al conectar con el lector de tarjetas.', 'error');
+                    socket.close();
+                };
+
+                socket.onclose = () => {
+                    console.log("WebSocket closed");
+                    setScanning(false);
+                };
+            },
+            willClose: () => {
+                setScanning(false);
+            }
+        });
     };
 
     return (
@@ -166,23 +234,28 @@ const PayServiceForm = () => {
                     />
                 </div>
                 <div className="mb-4">
-                    <label htmlFor="idCuenta" className="block text-gray-700 font-bold mb-2">
-                        Cuenta
+                    <label htmlFor="rfidCardNumber" className="block text-gray-700 font-bold mb-2">
+                        Número de Tarjeta RFID
                     </label>
-                    <select
-                        id="idCuenta"
-                        value={idCuenta}
-                        onChange={(e) => setIdCuenta(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        required
-                    >
-                        <option value="">Seleccione una cuenta</option>
-                        {accounts.map((account) => (
-                            <option key={account.id_cuenta} value={account.id_cuenta}>
-                                {account.numero_cuenta}
-                            </option>
-                        ))}
-                    </select>
+                    <div className="flex">
+                        <input
+                            type="text"
+                            id="rfidCardNumber"
+                            value={rfidCardNumber}
+                            onChange={(e) => setRfidCardNumber(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:border-blue-500"
+                            required
+                            readOnly
+                        />
+                        <button
+                            type="button"
+                            onClick={handleScan}
+                            className="bg-blue-500 text-white px-4 py-2 rounded-r-lg hover:bg-blue-600"
+                            disabled={scanning}
+                        >
+                            Escanear
+                        </button>
+                    </div>
                 </div>
                 <div className="mb-4">
                     <label htmlFor="idTipoServicio" className="block text-gray-700 font-bold mb-2">
