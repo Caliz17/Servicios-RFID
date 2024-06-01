@@ -14,7 +14,7 @@ const RfidCardForm = () => {
     const [accounts, setAccounts] = useState([]);
     const [editCardId, setEditCardId] = useState(null);
     const [alert, setAlert] = useState({ type: '', message: '', show: false });
-    const [scanning, setScanning] = useState(false); // Estado para controlar el escaneo
+    const [scanning, setScanning] = useState(false);
 
     const fetchAccounts = async () => {
         try {
@@ -45,14 +45,7 @@ const RfidCardForm = () => {
     useEffect(() => {
         fetchAccounts();
         fetchCards();
-        const socket = new WebSocket("ws://192.168.0.22:81/");
-        socket.onmessage = function (event) {
-            console.log("UID recibido: " + event.data);
-            setNumeroTarjeta(event.data); // Actualiza el estado del número de tarjeta con el valor recibido
-            setScanning(false); // Oculta el SweetAlert después de escanear
-        };
     }, []);
-
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -102,23 +95,23 @@ const RfidCardForm = () => {
             const action = rfidState === 1 ? 'desactivar' : 'activar';
             const endpoint = rfidState === 1 ? `/downCard/${id}` : `/upCard/${id}`;
             const result = await Swal.fire({
-                title: `¿Estás seguro que deseas ${action}lo! esta tarjeta?`,
+                title: `¿Estás seguro que deseas ${action} esta tarjeta?`,
                 text: 'Esta acción se puede deshacer',
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#3085d6',
                 cancelButtonColor: '#d33',
-                confirmButtonText: `Sí, ${action}lo!`,
+                confirmButtonText: `Sí, ${action}la!`,
             });
 
             if (result.isConfirmed) {
                 const response = await connectToAPI(endpoint, {}, 'PUT');
                 if (response.status) {
-                    setAlert({ type: 'success', message: `Tarjeta ${action}lo correctamente`, show: true });
+                    setAlert({ type: 'success', message: `Tarjeta ${action}da correctamente`, show: true });
                     fetchCards();
                 } else {
-                    console.error(`Error al ${action}lo!`, response.error);
-                    setAlert({ type: 'error', message: `Error al ${action}lo!`, show: true });
+                    console.error(`Error al ${action}la`, response.error);
+                    setAlert({ type: 'error', message: `Error al ${action}la`, show: true });
                 }
             }
         } catch (error) {
@@ -133,18 +126,48 @@ const RfidCardForm = () => {
             text: 'Por favor, acerque la tarjeta al lector...',
             icon: 'info',
             allowOutsideClick: false,
-            showConfirmButton: true,
+            showConfirmButton: false,
             willOpen: () => {
-                setScanning(true); 
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Realizar acciones después del escaneo si es necesario
-                setScanning(false); 
+                setScanning(true);
+                const startTime = Date.now();
+                let socket = new WebSocket("ws://192.168.0.22:81/");
+
+                socket.onopen = () => {
+                    console.log("WebSocket connected");
+                };
+
+                socket.onmessage = (event) => {
+                    console.log("UID recibido: " + event.data);
+                    setNumeroTarjeta(event.data);
+                    setScanning(false);
+                    Swal.close();
+                    const endTime = Date.now();
+                    console.log(`Tiempo total: ${endTime - startTime} ms`);
+                    socket.close();
+
+                    // Reiniciar el ESP32
+                    fetch('/reset') 
+                        .then(() => console.log('ESP32 reiniciado'))
+                        .catch(error => console.error('Error al reiniciar el ESP32:', error));
+                };
+
+                socket.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    setScanning(false);
+                    Swal.fire('Error', 'Error al conectar con el lector de tarjetas.', 'error');
+                    socket.close();
+                };
+
+                socket.onclose = () => {
+                    console.log("WebSocket closed");
+                    setScanning(false);
+                };
+            },
+            willClose: () => {
+                setScanning(false);
             }
         });
     };
-
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-200 p-6">
             {alert.show && <Alert type={alert.type} message={alert.message} />}
@@ -199,7 +222,7 @@ const RfidCardForm = () => {
                         Fecha de Asignación
                     </label>
                     <input
-                        type="datetime-local"
+                        type="date"
                         id="fechaAsignacion"
                         value={fechaAsignacion}
                         onChange={(e) => setFechaAsignacion(e.target.value)}
@@ -284,5 +307,3 @@ const RfidCardForm = () => {
 };
 
 export default RfidCardForm;
-
-
