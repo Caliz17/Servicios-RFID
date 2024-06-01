@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
+const ID_USUARIO_FIJO = 1;
 
 /**
  * @swagger
@@ -175,7 +177,7 @@ router.get('/transfer/:id', async (req, res) => {
 router.post('/newTransfer', async (req, res) => {
     try {
         const { fecha_transferencia, monto_transferencia, cuenta_origen, cuenta_destino, id_usuario_autorizador } = req.body;
-        
+
         if (!fecha_transferencia || !monto_transferencia || !cuenta_origen || !cuenta_destino || !id_usuario_autorizador) {
             return res.status(400).json({ status: false, message: 'Missing required fields' });
         }
@@ -192,7 +194,7 @@ router.post('/newTransfer', async (req, res) => {
                 id_usuario_autorizador
             }
         });
-
+        await registrarAuditoria('CREATE', 'Transferencia', newTransferencia.id_transferencia, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'Transfer created' });
     } catch (error) {
         console.error('Error creating transfer:', error);
@@ -228,18 +230,23 @@ router.put('/updateTransfer/:id', async (req, res) => {
     const { id } = req.params;
     const { fecha_transferencia, monto_transferencia, cuenta_origen, cuenta_destino, id_usuario_autorizador } = req.body;
     try {
+        // Parse fecha_transferencia to ISO-8601 format
+        const parsedFechaTransferencia = new Date(fecha_transferencia).toISOString();
+
         const updatedTransferencia = await prisma.transferencia.update({
             where: { id_transferencia: parseInt(id) },
             data: {
-                fecha_transferencia,
+                fecha_transferencia: parsedFechaTransferencia,
                 monto_transferencia,
                 cuenta_origen,
                 cuenta_destino,
                 id_usuario_autorizador
             }
         });
+        await registrarAuditoria('UPDATE', 'Transferencia', updatedTransferencia.id_transferencia, ID_USUARIO_FIJO);
         res.json({ status: true, message: 'Transfer updated' });
     } catch (error) {
+        console.log('Error updating transfer:', error);
         res.status(500).json({ status: false, message: 'Failed to update transfer' });
     }
 });
@@ -268,6 +275,7 @@ router.delete('/deleteTransfer/:id', async (req, res) => {
         await prisma.transferencia.delete({
             where: { id_transferencia: parseInt(id) }
         });
+        await registrarAuditoria('DELETE', 'Transferencia', parseInt(id), ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'Transfer deleted' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete transfer' });

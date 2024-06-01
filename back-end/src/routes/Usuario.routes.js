@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { prisma } from '../db.js';
 import jwt from 'jsonwebtoken';
+import { registrarAuditoria } from '../Auditoria.js';
 
 const router = Router();
+const ID_USUARIO_FIJO = 1;
 
 /**
  * @swagger
@@ -141,6 +143,7 @@ router.post('/newUser', async (req, res) => {
                 id_rol_usuario
             }
         });
+        await registrarAuditoria('CREATE', 'Usuario', newUser.id_usuario, ID_USUARIO_FIJO);
         res.status(201).json({ status: true, message: 'User created' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to create user' });
@@ -183,6 +186,7 @@ router.put('/updateUser/:id', async (req, res) => {
                 id_rol_usuario
             }
         });
+        await registrarAuditoria('UPDATE', 'Usuario', updatedUser.id_usuario, ID_USUARIO_FIJO);
         res.json({ status: true, message: 'User updated' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to update user' });
@@ -213,6 +217,7 @@ router.delete('/deleteUser/:id', async (req, res) => {
         await prisma.usuario.delete({
             where: { id_usuario: parseInt(id) }
         });
+        await registrarAuditoria('DELETE', 'Usuario', parseInt(id), ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'User deleted' });
     } catch (error) {
         res.status(500).json({ status: false, message: 'Failed to delete user' });
@@ -284,7 +289,7 @@ router.post('/login', async (req, res) => {
                 rolUsuario: true // Incluir el rol del usuario en la respuesta
             }
         });
-        
+
         // Si se encontró un usuario, responder con éxito y generar token
         if (user) {
             const token = jwt.sign({ userId: user.id_usuario, userType: 'usuario' }, 'your-secret-key', { expiresIn: '1h' });
