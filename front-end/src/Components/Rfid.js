@@ -65,8 +65,7 @@ const RfidCardForm = () => {
                 fetchCards();
                 handleCancel();
             } else {
-                console.error('Error al registrar/actualizar:', response.error);
-                setAlert({ type: 'error', message: 'Error en la operación', show: true });
+                setAlert({ type: 'error', message: response.message, show: true });
             }
         } catch (error) {
             console.error('Error al conectar con la API:', error);
