@@ -14,6 +14,7 @@ const UserForm = () => {
     const [editUserId, setEditUserId] = useState(null);
     const [alert, setAlert] = useState({ type: '', message: '', show: false });
     const [showPassword, setShowPassword] = useState(false);
+    const [isEditingPassword, setIsEditingPassword] = useState(false);
 
     const fetchRoles = async () => {
         try {
@@ -69,9 +70,10 @@ const UserForm = () => {
 
     const handleEdit = (user) => {
         setNombreUsuario(user.nombre_usuario);
-        setContrasena(user.contrasena);
+        setContrasena(''); // Establecer como vacío
         setIdRolUsuario(user.id_rol_usuario);
         setEditUserId(user.id_usuario);
+        setIsEditingPassword(true); // Indicar que se está editando la contraseña
     };
 
     const handleCancel = () => {
@@ -79,6 +81,7 @@ const UserForm = () => {
         setContrasena('');
         setIdRolUsuario('');
         setEditUserId(null);
+        setIsEditingPassword(false); // Restablecer al cancelar
     };
 
     const handleDelete = async (id) => {
@@ -140,6 +143,7 @@ const UserForm = () => {
                     <input
                         type={showPassword ? 'text' : 'password'}
                         id="contrasena"
+                        placeholder={isEditingPassword ? "Nueva Contraseña" : ""}
                         value={contrasena}
                         onChange={(e) => setContrasena(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
@@ -216,3 +220,4 @@ const UserForm = () => {
 };
 
 export default UserForm;
+

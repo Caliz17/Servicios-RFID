@@ -192,7 +192,6 @@ const Clients = () => {
             <input
               type="password"
               id="contrasenia"
-              value={contrasenia}
               onChange={(e) => setContrasenia(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
               required
