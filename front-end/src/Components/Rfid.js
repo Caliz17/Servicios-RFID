@@ -14,6 +14,7 @@ const RfidCardForm = () => {
     const [accounts, setAccounts] = useState([]);
     const [editCardId, setEditCardId] = useState(null);
     const [alert, setAlert] = useState({ type: '', message: '', show: false });
+    const [scanning, setScanning] = useState(false); // Estado para controlar el escaneo
 
     const fetchAccounts = async () => {
         try {
@@ -44,7 +45,14 @@ const RfidCardForm = () => {
     useEffect(() => {
         fetchAccounts();
         fetchCards();
+        const socket = new WebSocket("ws://192.168.0.22:81/");
+        socket.onmessage = function (event) {
+            console.log("UID recibido: " + event.data);
+            setNumeroTarjeta(event.data); // Actualiza el estado del número de tarjeta con el valor recibido
+            setScanning(false); // Oculta el SweetAlert después de escanear
+        };
     }, []);
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -119,6 +127,24 @@ const RfidCardForm = () => {
         }
     };
 
+    const handleScan = () => {
+        Swal.fire({
+            title: 'Escaneando',
+            text: 'Por favor, acerque la tarjeta al lector...',
+            icon: 'info',
+            allowOutsideClick: false,
+            showConfirmButton: true,
+            willOpen: () => {
+                setScanning(true); 
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Realizar acciones después del escaneo si es necesario
+                setScanning(false); 
+            }
+        });
+    };
+
     return (
         <div className="flex flex-col items-center min-h-screen bg-gray-200 p-6">
             {alert.show && <Alert type={alert.type} message={alert.message} />}
@@ -130,14 +156,24 @@ const RfidCardForm = () => {
                     <label htmlFor="numeroTarjeta" className="block text-gray-700 font-bold mb-2">
                         Número de Tarjeta
                     </label>
-                    <input
-                        type="text"
-                        id="numeroTarjeta"
-                        value={numeroTarjeta}
-                        onChange={(e) => setNumeroTarjeta(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                        required
-                    />
+                    <div className="flex">
+                        <input
+                            type="text"
+                            id="numeroTarjeta"
+                            value={numeroTarjeta}
+                            onChange={(e) => setNumeroTarjeta(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 bg-gray-200 rounded-lg focus:outline-none focus:border-blue-500"
+                            required
+                            readOnly={true}
+                        />
+                        <button
+                            type="button"
+                            onClick={handleScan}
+                            className="ml-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+                        >
+                            Escanear
+                        </button>
+                    </div>
                 </div>
                 <div className="mb-4">
                     <label htmlFor="idCuenta" className="block text-gray-700 font-bold mb-2">
@@ -248,3 +284,5 @@ const RfidCardForm = () => {
 };
 
 export default RfidCardForm;
+
+
