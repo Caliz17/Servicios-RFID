@@ -136,6 +136,17 @@ router.get('/card/:id', async (req, res) => {
 router.post('/newCard', async (req, res) => {
     const { numero_tarjeta, id_cuenta, fecha_asignacion, estado } = req.body;
     try {
+        // Verificar si existe alguna tarjeta RFID asociada con el número de cuenta proporcionado
+        const existingCard = await prisma.tarjetaRfid.findFirst({
+            where: {
+                numero_tarjeta: numero_tarjeta
+            }
+        });
+
+        if (existingCard) {
+            return res.status(200).json({ status: false, message: 'La tarjeta ya se encuentra registrada' });
+        }
+
         // Formatear la fecha en formato ISO-8601
         const formattedFechaAsignacion = new Date(fecha_asignacion).toISOString();
         
@@ -154,6 +165,8 @@ router.post('/newCard', async (req, res) => {
         res.status(500).json({ status: false, message: 'Failed to create RFID card' });
     }
 });
+
+
 
 /**
  * @swagger
