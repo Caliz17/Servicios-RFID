@@ -50,6 +50,8 @@ const ID_USUARIO_FIJO = 1;
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Usuario'
+ *       500:
+ *         description: Error al obtener los usuarios
  */
 router.get('/users', async (req, res) => {
     try {
@@ -98,6 +100,8 @@ router.get('/users', async (req, res) => {
  *               $ref: '#/components/schemas/Usuario'
  *       404:
  *         description: Usuario no encontrado
+ *       500:
+ *         description: Error al obtener el usuario
  */
 router.get('/user/:id', async (req, res) => {
     const { id } = req.params;
@@ -152,7 +156,6 @@ router.post('/newUser', async (req, res) => {
         res.status(500).json({ status: false, message: 'Failed to create user' });
     }
 });
-
 
 /**
  * @swagger
@@ -211,7 +214,7 @@ router.put('/updateUser/:id', async (req, res) => {
  *           type: integer
  *         description: ID del usuario
  *     responses:
- *       204:
+ *       200:
  *         description: Usuario eliminado
  *       500:
  *         description: Error eliminando el usuario
@@ -270,6 +273,8 @@ router.delete('/deleteUser/:id', async (req, res) => {
  *                 message:
  *                   type: string
  *                   description: Mensaje de éxito
+ *       400:
+ *         description: Nombre de usuario o contraseña no proporcionados
  *       403:
  *         description: La cuenta del cliente está inactiva
  *       404:
@@ -331,6 +336,5 @@ router.post('/login', async (req, res) => {
         res.status(500).json({ status: false, message: 'Error during login' });
     }
 });
-
 
 export default router;
