@@ -223,15 +223,24 @@ router.put('/updateUser/:id', async (req, res) => {
 router.delete('/deleteUser/:id', async (req, res) => {
     const { id } = req.params;
     try {
+        // Delete related records in the Auditoria table first
+        await prisma.auditoria.deleteMany({
+            where: { id_usuario: parseInt(id) }
+        });
+
+        // Now delete the user
         await prisma.usuario.delete({
             where: { id_usuario: parseInt(id) }
         });
+
         await registrarAuditoria('DELETE', 'Usuario', parseInt(id), ID_USUARIO_FIJO);
         res.status(200).json({ status: true, message: 'User deleted' });
     } catch (error) {
+        console.log(error);
         res.status(500).json({ status: false, message: 'Failed to delete user' });
     }
 });
+
 
 /**
  * @swagger
