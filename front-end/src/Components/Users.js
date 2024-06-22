@@ -52,6 +52,7 @@ const UserForm = () => {
         const endpoint = editUserId ? `/updateUser/${editUserId}` : '/newUser';
         const method = editUserId ? 'PUT' : 'POST';
         const idRolUsuarioInt = parseInt(id_rol_usuario); // Convertir a entero
+        console.log(nombreUsuario, contrasena, idRolUsuarioInt);
         try {
             const response = await connectToAPI(endpoint, { nombre_usuario: nombreUsuario, contrasena, id_rol_usuario: idRolUsuarioInt }, method);
             if (response.status) {

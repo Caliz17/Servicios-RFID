@@ -2,6 +2,7 @@ import { Router } from "express";
 import { prisma } from '../db.js';
 import jwt from 'jsonwebtoken';
 import { registrarAuditoria } from '../Auditoria.js';
+import bcrypt from 'bcrypt';
 
 const router = Router();
 const ID_USUARIO_FIJO = 1;
@@ -53,31 +54,34 @@ const ID_USUARIO_FIJO = 1;
  *       500:
  *         description: Error al obtener los usuarios
  */
-router.get('/users', async (req, res) => {
+router.post('/users', async (req, res) => {
+    const { nombre_usuario, contrasena, id_rol_usuario } = req.body;
+
+    // Validación básica
+    if (!nombre_usuario || !contrasena || !id_rol_usuario) {
+        return res.status(400).json({ status: false, message: 'All fields are required' });
+    }
+
     try {
-        const usuarios = await prisma.usuario.findMany({
-            include: {
-                rolUsuario: { // Esto incluye los datos de la tabla RolUsuario
-                    select: {
-                        nombre_rol: true,
-                    },
-                },
+        // Hashear la contraseña antes de guardarla
+        const hashedPassword = await bcrypt.hash(contrasena, 10);
+
+        // Crear el nuevo usuario en la base de datos
+        const newUser = await prisma.usuario.create({
+            data: {
+                nombre_usuario,
+                contrasena: hashedPassword,
+                id_rol_usuario,
             },
         });
 
-        // Mapear los usuarios para reemplazar id_rol_usuario con nombre_rol y omitir la contraseña
-        const usuariosConRol = usuarios.map(usuario => ({
-            id_usuario: usuario.id_usuario,
-            nombre_usuario: usuario.nombre_usuario,
-            nombre_rol: usuario.rolUsuario.nombre_rol,
-        }));
-
-        res.json({ status: true, data: usuariosConRol });
+        res.status(201).json({ status: true, data: newUser });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ status: false, message: 'Failed to fetch users' });
+        res.status(500).json({ status: false, message: 'Failed to create user' });
     }
 });
+
 
 /**
  * @swagger

@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faHome, faCogs, faUsers, faCartShopping, faUsersCog, faBarsStaggered, faFileInvoice, faCreditCard  } from '@fortawesome/free-solid-svg-icons';
-
+import { faHome, faCogs, faUsers, faCartShopping, faUsersCog, faBarsStaggered, faFileInvoice, faCreditCard,faRightFromBracket, faUser } from '@fortawesome/free-solid-svg-icons';
+import { useAuth } from '../AuthContext';
 
 const Dropdown = ({ title, icon, items }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,7 +18,7 @@ const Dropdown = ({ title, icon, items }) => {
   const handleMouseLeave = () => {
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false);
-    }, 200); // Retardo de 200 ms
+    }, 200); // 200ms delay
   };
 
   return (
@@ -35,13 +36,13 @@ const Dropdown = ({ title, icon, items }) => {
       {isOpen && (
         <div className="absolute left-0 mt-0 w-32 bg-gray-800 rounded-md shadow-lg">
           {items.map((item, index) => (
-            <a
+            <Link
               key={index}
-              href={item.href}
+              to={item.href}
               className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:rounded-md hover:text-white"
             >
               {item.label}
-            </a>
+            </Link>
           ))}
         </div>
       )}
@@ -49,12 +50,18 @@ const Dropdown = ({ title, icon, items }) => {
   );
 };
 
-
 const Navbar = () => {
+  const { loggedIn, logout } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
   };
 
   return (
@@ -65,8 +72,8 @@ const Navbar = () => {
             <div className="flex-shrink-0">
               <img className="h-8 w-8" src="https://cdn.icon-icons.com/icons2/3058/PNG/512/cloud_hosting_cloud_services_cloud_data_network_cloud_sharing_icon_190633.png" alt="Logo" />
             </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-8">
+            <div className="hidden md:flex md:items-center md:ml-10">
+              <div className="flex items-baseline space-x-8">
                 <Dropdown
                   title="Inicio"
                   icon={faHome}
@@ -90,7 +97,11 @@ const Navbar = () => {
                 <Dropdown
                   title="Cuentas"
                   icon={faFileInvoice}
-                  items={[{ label: 'Control de Cuentas', href: '/account' }, {label: 'Transferencias', href: '/transfer'}, { label: 'Tipos de Cuenta', href: '/typeAccount' }]}
+                  items={[
+                    { label: 'Control de Cuentas', href: '/account' },
+                    { label: 'Transferencias', href: '/transfer' },
+                    { label: 'Tipos de Cuenta', href: '/typeAccount' }
+                  ]}
                 />
                 <Dropdown
                   title="Clientes"
@@ -100,7 +111,10 @@ const Navbar = () => {
                 <Dropdown
                   title="Usuarios"
                   icon={faUsersCog}
-                  items={[{ label: 'Control de Usuarios', href: '/users' }, { label: 'Roles de Usuario', href: '/roles' }]}  
+                  items={[
+                    { label: 'Control de Usuarios', href: '/users' },
+                    { label: 'Roles de Usuario', href: '/roles' }
+                  ]}
                 />
                 <Dropdown
                   title="Auditoria"
@@ -108,7 +122,22 @@ const Navbar = () => {
                   items={[{ label: 'Acciones', href: '/actions' }]}
                 />
               </div>
+
+              <div className="ml-4 md:ml-6">
+                {loggedIn ? (
+                  <button onClick={handleLogout} className="flex items-center text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
+                    <FontAwesomeIcon icon={faRightFromBracket} className="mr-1" /> {/* Icono de salida (Logout) */}
+                    Logout
+                  </button>
+                ) : (
+                  <Link to="/login" className="flex items-center ml-8 md:ml-0 text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-full font-medium">
+                    <FontAwesomeIcon icon={faUser} className="mr-1" /> {/* Icono de entrada (Login) */}
+                    Login
+                  </Link>
+                )}
+              </div>
             </div>
+
           </div>
           <div className="-mr-2 flex md:hidden">
             <button
@@ -131,10 +160,10 @@ const Navbar = () => {
       </div>
       <div className={`md:hidden ${isOpen ? 'block' : 'hidden'}`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          <a href="#" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Inicio</a>
-          <a href="#" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Acerca de</a>
-          <a href="#" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Servicios</a>
-          <a href="#" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Contacto</a>
+          <Link to="/home" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Inicio</Link>
+          <Link to="/about" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Acerca de</Link>
+          <Link to="/services" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Servicios</Link>
+          <Link to="/contact" className="text-gray-300 hover:bg-gray-700 hover:text-white block px-3 py-2 rounded-md text-base font-medium">Contacto</Link>
         </div>
       </div>
     </nav>
