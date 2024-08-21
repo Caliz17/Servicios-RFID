@@ -137,3 +137,5 @@ ALTER TABLE "Auditoria" ADD CONSTRAINT "Auditoria_id_usuario_fkey" FOREIGN KEY (
 
 -- AddForeignKey
 ALTER TABLE "TarjetaRfid" ADD CONSTRAINT "TarjetaRfid_id_cuenta_fkey" FOREIGN KEY ("id_cuenta") REFERENCES "Cuenta"("id_cuenta") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- end of migration
